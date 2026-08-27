@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+.env.local
+router-deployment.json
+*.log
+*.tsbuildinfo
+contracts/target/
+contracts/.snfoundry_cache/
+references/*/.git/
+
+# Sample source material used during local research
+references/
+
+# Internal product instructions and planning documents (kept local)
+docs/
+.vercel

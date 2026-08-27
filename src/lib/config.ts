@@ -1,0 +1,14 @@
+export const STARKNET_RPC_URL = process.env.NEXT_PUBLIC_STARKNET_RPC_URL ?? "";
+export const NETWORK = process.env.NEXT_PUBLIC_NETWORK ?? "SN_MAIN";
+export const POOL_ADDRESS = process.env.NEXT_PUBLIC_POOL_ADDRESS ?? "0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a";
+export const STRK_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_STRK_TOKEN_ADDRESS ?? "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+export const ROUTER_ADDRESS = process.env.NEXT_PUBLIC_ROUTER_ADDRESS ?? "";
+export const ENDUR_XSTRK_ADDRESS = process.env.NEXT_PUBLIC_ENDUR_XSTRK_ADDRESS ?? "";
+export const ENDUR_DEPOSIT_ANONYMIZER_ADDRESS = process.env.NEXT_PUBLIC_ENDUR_DEPOSIT_ANONYMIZER_ADDRESS ?? "0x030dee638065962eb3642ca54aa48e9e2cd98536bc90b64b99bb306c1db30698";
+export const VESU_RECEIPT_ADDRESS = process.env.NEXT_PUBLIC_VESU_RECEIPT_ADDRESS ?? "";
+export const VESU_VAULT_ADDRESS = process.env.NEXT_PUBLIC_VESU_VAULT_ADDRESS ?? "";
+export const AVNU_PRIVATE_EXECUTOR_ADDRESS = process.env.NEXT_PUBLIC_AVNU_PRIVATE_EXECUTOR_ADDRESS ?? "";
+export const AVNU_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_AVNU_ROUTER_ADDRESS ?? "";
+export const EKUBO_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_EKUBO_ROUTER_ADDRESS ?? "";
+export const explorerTx = (hash: string) => `https://voyager.online/tx/${hash}`;
+export const explorerContract = (address: string) => `https://voyager.online/contract/${address}`;

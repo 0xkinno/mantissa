@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root { --bg:#FAFAF8; --surface:#fff; --ink:#1A1A18; --muted:#6B6960; --border:#E8E5E0; --forest:#2D5A27; --indigo:#4338CA; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif; }
+a { color:inherit; text-decoration:none; }
+.mono { font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; }
+.editorial { font-family:Georgia,serif; }
+.grid-paper { background-image:linear-gradient(to right, rgba(26,26,24,.045) 1px, transparent 1px),linear-gradient(to bottom, rgba(26,26,24,.045) 1px, transparent 1px); background-size:32px 32px; }
+button { font:inherit; }
