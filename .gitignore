@@ -13,5 +13,6 @@ references/*/.git/
 references/
 
 # Internal product instructions and planning documents (kept local)
-docs/
+docs/*
+!docs/assets/
 .vercel

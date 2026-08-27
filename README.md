@@ -7,7 +7,7 @@
 [![STRK20](https://img.shields.io/badge/Built%20on-STRK20%20Privacy%20Pool-2D5A27.svg)](https://strk20.starknet.io)
 [![Status](https://img.shields.io/badge/Status-Live%20on%20Mainnet-brightgreen.svg)](#verified-lifecycle-proof)
 
-![MANTISSA banner](docs/assets/banner-placeholder.png)
+![MANTISSA banner](docs/assets/banner.png)
 
 **Your yield is real. Your identity isn't.** MANTISSA lets a DeFi investor shield capital, route it into real Starknet yield strategies, and receive new private state after the action, without ever exposing their position, their strategy, or themselves.
 
@@ -238,7 +238,7 @@ Set a Starknet RPC endpoint and the verified mainnet addresses in `.env.local`. 
 
 ## For Judges
 
-[Evidence](EVIDENCE.md) Â· [STRK20 Integration](STRK20_INTEGRATION.md)
+[Evidence](EVIDENCE.md) · [STRK20 Integration](STRK20_INTEGRATION.md)
 
 ## License
 

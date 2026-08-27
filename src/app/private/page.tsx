@@ -2,31 +2,527 @@
 
 import { useEffect, useState } from "react";
 import { walletV6, type STRK20_ACTION, type WalletAccountV6 } from "starknet";
+import { motion } from "framer-motion";
 import Nav from "@/components/Nav";
-import { connectWallet, getWalletSession, getWallets, restoreWallet, subscribeWalletSession, type DiscoveredWallet, shorten } from "@/lib/wallet";
-import { buildEndurForgeActions, formatAmount, getPoolFee, getPublicStrkBalance, normalizeFelt, parseAmount, shieldAction, withdrawAction, describeWalletError } from "@/lib/strk20";
-import { buildAvnuRecipe, buildVesuRecipe, encodePlan, type Plan } from "@/lib/recipes";
-import { AVNU_PRIVATE_EXECUTOR_ADDRESS, ENDUR_DEPOSIT_ANONYMIZER_ADDRESS, ENDUR_XSTRK_ADDRESS, NETWORK, ROUTER_ADDRESS, STRK_TOKEN_ADDRESS, VESU_VAULT_ADDRESS } from "@/lib/config";
+import {
+  connectWallet,
+  getWalletSession,
+  getWallets,
+  restoreWallet,
+  subscribeWalletSession,
+  type DiscoveredWallet,
+  shorten,
+} from "@/lib/wallet";
+import {
+  buildEndurForgeActions,
+  formatAmount,
+  getPoolFee,
+  getPublicStrkBalance,
+  normalizeFelt,
+  parseAmount,
+  shieldAction,
+  withdrawAction,
+  describeWalletError,
+} from "@/lib/strk20";
+import {
+  buildAvnuRecipe,
+  buildVesuRecipe,
+  encodePlan,
+  type Plan,
+} from "@/lib/recipes";
+import {
+  AVNU_PRIVATE_EXECUTOR_ADDRESS,
+  ENDUR_DEPOSIT_ANONYMIZER_ADDRESS,
+  ENDUR_XSTRK_ADDRESS,
+  NETWORK,
+  ROUTER_ADDRESS,
+  STRK_TOKEN_ADDRESS,
+  VESU_VAULT_ADDRESS,
+} from "@/lib/config";
 
 type StrategyMode = "forge" | "reservoir" | "prism";
 const GAS_RESERVE = 10n ** 18n;
 
 export default function PrivatePage() {
-  const [wallets, setWallets] = useState<DiscoveredWallet[]>([]); const [account, setAccount] = useState<WalletAccountV6>(); const [supported, setSupported] = useState<boolean>(); const [mode, setMode] = useState<StrategyMode>("forge"); const [amount, setAmount] = useState("10"); const [status, setStatus] = useState("Connect a privacy-enabled wallet to begin."); const [balances, setBalances] = useState({ strk: "", xstrk: "", vstrk: "", eth: "" }); const [runtimePreview, setRuntimePreview] = useState(""); const [pendingActions, setPendingActions] = useState<{ label: string; actions: STRK20_ACTION[] }>(); const [poolFee, setPoolFee] = useState<bigint>(); const [publicBalance, setPublicBalance] = useState<bigint>();
+  const [wallets, setWallets] = useState<DiscoveredWallet[]>([]);
+  const [account, setAccount] = useState<WalletAccountV6>();
+  const [supported, setSupported] = useState<boolean>();
+  const [mode, setMode] = useState<StrategyMode>("forge");
+  const [amount, setAmount] = useState("10");
+  const [status, setStatus] = useState("Connect a privacy-enabled wallet to begin.");
+  const [balances, setBalances] = useState({ strk: "", xstrk: "", vstrk: "", eth: "" });
+  const [runtimePreview, setRuntimePreview] = useState("");
+  const [pendingActions, setPendingActions] = useState<{ label: string; actions: STRK20_ACTION[] }>();
+  const [poolFee, setPoolFee] = useState<bigint>();
+  const [publicBalance, setPublicBalance] = useState<bigint>();
 
-  useEffect(() => { setWallets(getWallets()); const selected = new URLSearchParams(window.location.search).get("strategy"); if (selected === "forge" || selected === "reservoir" || selected === "prism") setMode(selected); getPoolFee().then(setPoolFee).catch(() => undefined); const sync = () => { const current = getWalletSession(); setAccount(current?.account); if (current?.wallet) walletV6.supportedWalletApi(current.wallet as Parameters<typeof walletV6.supportedWalletApi>[0]).then((versions) => setSupported(versions.some((v) => { const [major, minor] = v.split(".").map(Number); return major > 0 || minor >= 10; }))).catch(() => setSupported(false)); else setSupported(undefined); if (current?.account) getPublicStrkBalance(current.account.address).then(setPublicBalance).catch(() => undefined); else setPublicBalance(undefined); }; sync(); restoreWallet().then(sync); const unsubscribe = subscribeWalletSession(sync); return () => { unsubscribe(); }; }, []);
-  async function connect(selected: DiscoveredWallet) { try { setStatus("Approve the connection in your wallet."); const connected = await connectWallet(selected); setAccount(connected); setStatus(`Connected ${shorten(connected.address)} on ${NETWORK}.`); } catch (error) { setStatus(`Wallet error: ${describeWalletError(error)}`); } }
-  async function submit(actions: STRK20_ACTION[], label: string) { if (!account || !supported) return; try { setStatus(`Approve ${label} in your wallet.`); const result = await account.strk20InvokeTransaction(actions); setStatus(`${label} submitted: ${result.transaction_hash}`); } catch (error) { setStatus(`Wallet error: ${describeWalletError(error)}`); } }
-  function hexPlan(plan: Plan) { return encodePlan(plan).map((value) => typeof value === "bigint" ? `0x${value.toString(16)}` : value.startsWith("${") ? value : normalizeFelt(value)); }
-  function forgeActions(raw: bigint): STRK20_ACTION[] { if (!account || !ENDUR_XSTRK_ADDRESS) throw new Error("Endur xSTRK is not configured."); return buildEndurForgeActions({ raw, account: account.address, xstrk: ENDUR_XSTRK_ADDRESS, anonymizer: ENDUR_DEPOSIT_ANONYMIZER_ADDRESS }); }
-  function routerActions(plan: Plan, raw: bigint, outputToken: string): STRK20_ACTION[] { if (!account || !ROUTER_ADDRESS) throw new Error("Mantissa Router is not configured."); return [{ type: "withdraw", token: normalizeFelt(STRK_TOKEN_ADDRESS), amount: `0x${raw.toString(16)}`, recipient: normalizeFelt(ROUTER_ADDRESS) }, { type: "transfer", token: normalizeFelt(outputToken), amount: "OPEN", recipient: normalizeFelt(account.address) }, { type: "invoke", contract: normalizeFelt(ROUTER_ADDRESS), calldata: hexPlan(plan) }]; }
-  async function privateBalance(token: string) { if (!account) return 0n; const entries = await account.strk20Balances([]); return BigInt(entries.find((entry) => BigInt(entry.token) === BigInt(token))?.balance ?? 0); }
-  async function buildStrategyActions(raw: bigint): Promise<STRK20_ACTION[]> { if (mode === "forge") return forgeActions(raw); if (mode === "reservoir") return routerActions(buildVesuRecipe(raw), raw, VESU_VAULT_ADDRESS); if (!AVNU_PRIVATE_EXECUTOR_ADDRESS) throw new Error("AVNU private executor is not configured."); const eth = process.env.NEXT_PUBLIC_ETH_ADDRESS ?? ""; if (!eth) throw new Error("ETH output token is not configured for Prism."); const url = new URL("https://starknet.api.avnu.fi/swap/v3/quotes"); url.searchParams.set("sellTokenAddress", STRK_TOKEN_ADDRESS); url.searchParams.set("buyTokenAddress", eth); url.searchParams.set("sellAmount", `0x${raw.toString(16)}`); url.searchParams.set("size", "1"); const quote = (await (await fetch(url)).json())?.[0]; if (!quote?.quoteId) throw new Error("AVNU returned no executable quote."); const response = await fetch("https://starknet.api.avnu.fi/swap/v3/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ quoteId: quote.quoteId, slippage: 0.01, private: true }) }); const built = await response.json(); if (!response.ok) throw new Error(`AVNU build failed (${response.status}).`); return routerActions(buildAvnuRecipe({ amount: raw, outputToken: eth, builtCalls: built.calls ?? [] }), raw, eth); }
-  async function prepareStrategy() { if (!account || !supported) { setStatus("Connect a Wallet API 0.10+ wallet before previewing."); return; } try { const raw = parseAmount(amount); if (raw > await privateBalance(STRK_TOKEN_ADDRESS)) throw new Error("Insufficient private STRK balance. Shield STRK first and wait for note maturity."); const actions = await buildStrategyActions(raw); setRuntimePreview(`Wallet request payload:\n${JSON.stringify(actions, null, 2)}\n\nResolved call:\n${JSON.stringify((await account.strk20PrepareInvoke(actions, true)).call, (_, value) => typeof value === "bigint" ? `0x${value.toString(16)}` : value, 2)}`); setPendingActions({ label: mode === "forge" ? "private Forge" : mode === "reservoir" ? "private Reservoir" : "private Prism", actions }); setStatus(`${mode[0].toUpperCase()}${mode.slice(1)} call resolved. Review it, then sign.`); } catch (error) { setPendingActions(undefined); setStatus(`Wallet error: ${describeWalletError(error)}`); } }
-  async function signStrategy() { if (!account) return; try { const raw = parseAmount(amount); const balance = await privateBalance(STRK_TOKEN_ADDRESS); if (!balance || raw > balance) throw new Error(`Insufficient private STRK for ${mode}. Shield STRK first and wait for note maturity.`); const actions = pendingActions?.actions ?? await buildStrategyActions(raw); await submit(actions, mode === "forge" ? "private Forge" : mode === "reservoir" ? "private Reservoir" : "private Prism"); } catch (error) { setStatus(`Wallet error: ${describeWalletError(error)}`); } }
-  async function shield() { try { const raw = parseAmount(amount); const [fee, balance] = await Promise.all([getPoolFee(), account ? getPublicStrkBalance(account.address) : Promise.resolve(undefined)]); setPoolFee(fee); if (balance !== undefined) setPublicBalance(balance); const spendable = balance !== undefined && balance > GAS_RESERVE ? balance - GAS_RESERVE : 0n; if (balance !== undefined && raw > spendable) throw new Error(`Amount exceeds wallet-safe balance (${formatAmount(spendable)} STRK).`); if (raw <= fee) throw new Error(`Shield amount must exceed the ${formatAmount(fee)} STRK pool fee.`); await submit([shieldAction(raw)], "shield"); } catch (error) { setStatus(`Wallet error: ${describeWalletError(error)}`); } }
-  async function unshield(token: string, label: string) { if (!account) return; try { const raw = parseAmount(amount); const balance = await privateBalance(token); if (!balance || raw > balance) throw new Error(`Insufficient private ${label} balance. Public wallet STRK is not spendable for unshield.`); await submit([withdrawAction(raw, account.address, token)], `${label} unshield`); } catch (error) { setStatus(`Wallet error: ${describeWalletError(error)}`); } }
-  async function readBalances() { if (!account) return; try { const entries = await account.strk20Balances([]); const find = (token: string) => formatAmount(BigInt(entries.find((entry) => BigInt(entry.token) === BigInt(token))?.balance ?? 0)); const next = { strk: find(STRK_TOKEN_ADDRESS), xstrk: find(ENDUR_XSTRK_ADDRESS), vstrk: find(VESU_VAULT_ADDRESS), eth: find(process.env.NEXT_PUBLIC_ETH_ADDRESS ?? "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7") }; setBalances(next); setStatus(`Private balances loaded: STRK ${next.strk}, xSTRK ${next.xstrk}, vSTRK ${next.vstrk}, ETH ${next.eth}.`); } catch (error) { setStatus(`Wallet error: ${describeWalletError(error)}`); } }
-  const title = mode === "forge" ? "Forge Â· Endur liquid staking" : mode === "reservoir" ? "Reservoir Â· Vesu lending" : "Prism Â· AVNU private swap";
-  return <main><Nav/><section className="mx-auto max-w-4xl px-6 py-16"><p className="mono text-xs uppercase tracking-[.25em] text-[var(--forest)]">STRK20 private actions</p><h1 className="editorial mt-4 text-6xl tracking-[-.04em]">{title}</h1><p className="mt-5 max-w-2xl leading-7 text-[var(--muted)]">Each strategy has its own private input, protocol call, output note, and unshield route. Fresh notes must mature before they can be spent.</p><div className="mt-8 flex flex-wrap gap-2">{(["forge", "reservoir", "prism"] as StrategyMode[]).map((item) => <button key={item} onClick={() => { setMode(item); setPendingActions(undefined); }} className={`rounded-full border px-4 py-2 text-sm ${mode === item ? "border-[var(--forest)] bg-[#E8F0E6]" : "border-[var(--border)] bg-white"}`}>{item[0].toUpperCase() + item.slice(1)}</button>)}</div><div className="mt-6 rounded-3xl border border-[var(--border)] bg-white p-6"><div className="flex flex-wrap gap-3">{account ? <span className="rounded-full border border-[var(--forest)] bg-[#E8F0E6] px-5 py-3 text-sm text-[var(--forest)]">Wallet connected: {shorten(account.address)}</span> : wallets.map((item, index) => <button key={`${item.name}-${index}`} onClick={() => connect(item)} className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm text-white">Connect {item.name ?? "wallet"}</button>)}</div><p className="mt-5 break-words text-sm text-[var(--muted)]">{status}</p>{supported && account && <div className="mt-6 space-y-4"><label className="mono block text-xs uppercase tracking-[.15em] text-[var(--muted)]">Amount<input value={amount} onChange={(event) => setAmount(event.target.value)} className="mt-2 w-full border-b border-[var(--border)] bg-transparent py-2 text-2xl outline-none" inputMode="decimal"/></label><div className="flex flex-wrap gap-3"><button onClick={shield} className="rounded-full bg-[var(--forest)] px-5 py-3 text-sm text-white">Shield STRK</button><button onClick={prepareStrategy} className="rounded-full border border-[var(--ink)] px-5 py-3 text-sm">Preview {mode}</button><button onClick={signStrategy} className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm text-white">{mode === "forge" ? "2. Forge STRK to xSTRK" : mode === "reservoir" ? "2. Reservoir STRK to vSTRK" : "2. Prism STRK to ETH"}</button><button onClick={() => unshield(mode === "forge" ? ENDUR_XSTRK_ADDRESS : mode === "reservoir" ? VESU_VAULT_ADDRESS : (process.env.NEXT_PUBLIC_ETH_ADDRESS ?? "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"), mode === "forge" ? "xSTRK" : mode === "reservoir" ? "vSTRK" : "ETH")} className="rounded-full border border-[var(--border)] px-5 py-3 text-sm">Unshield {mode === "forge" ? "xSTRK" : mode === "reservoir" ? "vSTRK" : "ETH"}</button><button onClick={() => unshield(STRK_TOKEN_ADDRESS, "STRK")} className="rounded-full border border-[var(--border)] px-5 py-3 text-sm">Unshield STRK</button><button onClick={readBalances} className="rounded-full border border-[var(--border)] px-5 py-3 text-sm">Read private balances</button></div>{balances.strk && <p className="mono text-sm text-[var(--forest)]">Private STRK {balances.strk} Â· xSTRK {balances.xstrk} Â· vSTRK {balances.vstrk} Â· ETH {balances.eth}</p>}{runtimePreview && <pre className="max-h-80 overflow-auto rounded-2xl bg-[#111] p-4 text-xs text-[#d8f3dc]">{runtimePreview}</pre>}{pendingActions && <button onClick={() => submit(pendingActions.actions, pendingActions.label)} className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm text-white">Sign resolved {mode} route</button>}</div>}</div></section></main>;
+  useEffect(() => {
+    setWallets(getWallets());
+    const selected = new URLSearchParams(window.location.search).get("strategy");
+    if (selected === "forge" || selected === "reservoir" || selected === "prism")
+      setMode(selected);
+    getPoolFee().then(setPoolFee).catch(() => undefined);
+    const sync = () => {
+      const current = getWalletSession();
+      setAccount(current?.account);
+      if (current?.wallet)
+        walletV6
+          .supportedWalletApi(
+            current.wallet as Parameters<typeof walletV6.supportedWalletApi>[0]
+          )
+          .then((versions) =>
+            setSupported(
+              versions.some((v) => {
+                const [major, minor] = v.split(".").map(Number);
+                return major > 0 || minor >= 10;
+              })
+            )
+          )
+          .catch(() => setSupported(false));
+      else setSupported(undefined);
+      if (current?.account)
+        getPublicStrkBalance(current.account.address)
+          .then(setPublicBalance)
+          .catch(() => undefined);
+      else setPublicBalance(undefined);
+    };
+    sync();
+    restoreWallet().then(sync);
+    const unsubscribe = subscribeWalletSession(sync);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  async function connect(selected: DiscoveredWallet) {
+    try {
+      setStatus("Approve the connection in your wallet.");
+      const connected = await connectWallet(selected);
+      setAccount(connected);
+      setStatus(`Connected ${shorten(connected.address)} on ${NETWORK}.`);
+    } catch (error) {
+      setStatus(`Wallet error: ${describeWalletError(error)}`);
+    }
+  }
+
+  async function submit(actions: STRK20_ACTION[], label: string) {
+    if (!account || !supported) return;
+    try {
+      setStatus(`Approve ${label} in your wallet.`);
+      const result = await account.strk20InvokeTransaction(actions);
+      setStatus(`${label} submitted: ${result.transaction_hash}`);
+    } catch (error) {
+      setStatus(`Wallet error: ${describeWalletError(error)}`);
+    }
+  }
+
+  function hexPlan(plan: Plan) {
+    return encodePlan(plan).map((value) =>
+      typeof value === "bigint"
+        ? `0x${value.toString(16)}`
+        : value.startsWith("${")
+        ? value
+        : normalizeFelt(value)
+    );
+  }
+
+  function forgeActions(raw: bigint): STRK20_ACTION[] {
+    if (!account || !ENDUR_XSTRK_ADDRESS)
+      throw new Error("Endur xSTRK is not configured.");
+    return buildEndurForgeActions({
+      raw,
+      account: account.address,
+      xstrk: ENDUR_XSTRK_ADDRESS,
+      anonymizer: ENDUR_DEPOSIT_ANONYMIZER_ADDRESS,
+    });
+  }
+
+  function routerActions(
+    plan: Plan,
+    raw: bigint,
+    outputToken: string
+  ): STRK20_ACTION[] {
+    if (!account || !ROUTER_ADDRESS)
+      throw new Error("Mantissa Router is not configured.");
+    return [
+      {
+        type: "withdraw",
+        token: normalizeFelt(STRK_TOKEN_ADDRESS),
+        amount: `0x${raw.toString(16)}`,
+        recipient: normalizeFelt(ROUTER_ADDRESS),
+      },
+      {
+        type: "transfer",
+        token: normalizeFelt(outputToken),
+        amount: "OPEN",
+        recipient: normalizeFelt(account.address),
+      },
+      {
+        type: "invoke",
+        contract: normalizeFelt(ROUTER_ADDRESS),
+        calldata: hexPlan(plan),
+      },
+    ];
+  }
+
+  async function privateBalance(token: string) {
+    if (!account) return 0n;
+    const entries = await account.strk20Balances([]);
+    return BigInt(
+      entries.find((entry) => BigInt(entry.token) === BigInt(token))?.balance ?? 0
+    );
+  }
+
+  async function buildStrategyActions(raw: bigint): Promise<STRK20_ACTION[]> {
+    if (mode === "forge") return forgeActions(raw);
+    if (mode === "reservoir")
+      return routerActions(buildVesuRecipe(raw), raw, VESU_VAULT_ADDRESS);
+    if (!AVNU_PRIVATE_EXECUTOR_ADDRESS)
+      throw new Error("AVNU private executor is not configured.");
+    const eth = process.env.NEXT_PUBLIC_ETH_ADDRESS ?? "";
+    if (!eth) throw new Error("ETH output token is not configured for Prism.");
+    const url = new URL("https://starknet.api.avnu.fi/swap/v3/quotes");
+    url.searchParams.set("sellTokenAddress", STRK_TOKEN_ADDRESS);
+    url.searchParams.set("buyTokenAddress", eth);
+    url.searchParams.set("sellAmount", `0x${raw.toString(16)}`);
+    url.searchParams.set("size", "1");
+    const quote = (await (await fetch(url)).json())?.[0];
+    if (!quote?.quoteId) throw new Error("AVNU returned no executable quote.");
+    const response = await fetch("https://starknet.api.avnu.fi/swap/v3/build", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        quoteId: quote.quoteId,
+        slippage: 0.01,
+        private: true,
+      }),
+    });
+    const built = await response.json();
+    if (!response.ok)
+      throw new Error(`AVNU build failed (${response.status}).`);
+    return routerActions(
+      buildAvnuRecipe({
+        amount: raw,
+        outputToken: eth,
+        builtCalls: built.calls ?? [],
+      }),
+      raw,
+      eth
+    );
+  }
+
+  async function prepareStrategy() {
+    if (!account || !supported) {
+      setStatus("Connect a Wallet API 0.10+ wallet before previewing.");
+      return;
+    }
+    try {
+      const raw = parseAmount(amount);
+      if (raw > (await privateBalance(STRK_TOKEN_ADDRESS)))
+        throw new Error(
+          "Insufficient private STRK balance. Shield STRK first and wait for note maturity."
+        );
+      const actions = await buildStrategyActions(raw);
+      setRuntimePreview(
+        `Wallet request payload:\n${JSON.stringify(
+          actions,
+          null,
+          2
+        )}\n\nResolved call:\n${JSON.stringify(
+          (await account.strk20PrepareInvoke(actions, true)).call,
+          (_, value) =>
+            typeof value === "bigint" ? `0x${value.toString(16)}` : value,
+          2
+        )}`
+      );
+      setPendingActions({
+        label:
+          mode === "forge"
+            ? "private Forge"
+            : mode === "reservoir"
+            ? "private Reservoir"
+            : "private Prism",
+        actions,
+      });
+      setStatus(
+        `${mode[0].toUpperCase()}${mode.slice(1)} call resolved. Review it, then sign.`
+      );
+    } catch (error) {
+      setPendingActions(undefined);
+      setStatus(`Wallet error: ${describeWalletError(error)}`);
+    }
+  }
+
+  async function signStrategy() {
+    if (!account) return;
+    try {
+      const raw = parseAmount(amount);
+      const balance = await privateBalance(STRK_TOKEN_ADDRESS);
+      if (!balance || raw > balance)
+        throw new Error(
+          `Insufficient private STRK for ${mode}. Shield STRK first and wait for note maturity.`
+        );
+      const actions =
+        pendingActions?.actions ?? (await buildStrategyActions(raw));
+      await submit(
+        actions,
+        mode === "forge"
+          ? "private Forge"
+          : mode === "reservoir"
+          ? "private Reservoir"
+          : "private Prism"
+      );
+    } catch (error) {
+      setStatus(`Wallet error: ${describeWalletError(error)}`);
+    }
+  }
+
+  async function shield() {
+    try {
+      const raw = parseAmount(amount);
+      const [fee, balance] = await Promise.all([
+        getPoolFee(),
+        account
+          ? getPublicStrkBalance(account.address)
+          : Promise.resolve(undefined),
+      ]);
+      setPoolFee(fee);
+      if (balance !== undefined) setPublicBalance(balance);
+      const spendable =
+        balance !== undefined && balance > GAS_RESERVE
+          ? balance - GAS_RESERVE
+          : 0n;
+      if (balance !== undefined && raw > spendable)
+        throw new Error(
+          `Amount exceeds wallet-safe balance (${formatAmount(spendable)} STRK).`
+        );
+      if (raw <= fee)
+        throw new Error(
+          `Shield amount must exceed the ${formatAmount(fee)} STRK pool fee.`
+        );
+      await submit([shieldAction(raw)], "shield");
+    } catch (error) {
+      setStatus(`Wallet error: ${describeWalletError(error)}`);
+    }
+  }
+
+  async function unshield(token: string, label: string) {
+    if (!account) return;
+    try {
+      const raw = parseAmount(amount);
+      const balance = await privateBalance(token);
+      if (!balance || raw > balance)
+        throw new Error(
+          `Insufficient private ${label} balance. Public wallet STRK is not spendable for unshield.`
+        );
+      await submit(
+        [withdrawAction(raw, account.address, token)],
+        `${label} unshield`
+      );
+    } catch (error) {
+      setStatus(`Wallet error: ${describeWalletError(error)}`);
+    }
+  }
+
+  async function readBalances() {
+    if (!account) return;
+    try {
+      const entries = await account.strk20Balances([]);
+      const find = (token: string) =>
+        formatAmount(
+          BigInt(
+            entries.find((entry) => BigInt(entry.token) === BigInt(token))
+              ?.balance ?? 0
+          )
+        );
+      const next = {
+        strk: find(STRK_TOKEN_ADDRESS),
+        xstrk: find(ENDUR_XSTRK_ADDRESS),
+        vstrk: find(VESU_VAULT_ADDRESS),
+        eth: find(
+          process.env.NEXT_PUBLIC_ETH_ADDRESS ??
+            "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
+        ),
+      };
+      setBalances(next);
+      setStatus(
+        `Private balances loaded: STRK ${next.strk}, xSTRK ${next.xstrk}, vSTRK ${next.vstrk}, ETH ${next.eth}.`
+      );
+    } catch (error) {
+      setStatus(`Wallet error: ${describeWalletError(error)}`);
+    }
+  }
+
+  const title =
+    mode === "forge"
+      ? "Forge · Endur liquid staking"
+      : mode === "reservoir"
+      ? "Reservoir · Vesu lending"
+      : "Prism · AVNU private swap";
+
+  return (
+    <main className="min-h-screen bg-[var(--bg)] text-[var(--ink)] antialiased">
+      <Nav />
+      <section className="mx-auto max-w-4xl px-6 py-16 md:py-24">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <p className="mono text-xs uppercase tracking-[.25em] text-[var(--forest)]">
+            STRK20 private actions
+          </p>
+          <h1 className="editorial mt-4 text-5xl tracking-[-.04em] md:text-6xl">
+            {title}
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">
+            Each strategy has its own private input, protocol call, output note,
+            and unshield route. Fresh notes must mature before they can be spent.
+          </p>
+        </motion.div>
+
+        <div className="mt-8 flex flex-wrap gap-2">
+          {(["forge", "reservoir", "prism"] as StrategyMode[]).map((item) => (
+            <button
+              key={item}
+              onClick={() => {
+                setMode(item);
+                setPendingActions(undefined);
+              }}
+              className={`rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-150 ${
+                mode === item
+                  ? "border-[var(--forest)] bg-[#E8F0E6] text-[var(--forest)] shadow-sm"
+                  : "border-[var(--border)] bg-white text-[var(--ink)] hover:border-[var(--ink)]"
+              }`}
+            >
+              {item[0].toUpperCase() + item.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="mt-6 rounded-3xl border border-[var(--border)] bg-white p-6 shadow-sm md:p-8"
+        >
+          <div className="flex flex-wrap gap-3">
+            {account ? (
+              <span className="rounded-full border border-[var(--forest)] bg-[#E8F0E6] px-5 py-2.5 text-sm font-medium text-[var(--forest)]">
+                Wallet connected: {shorten(account.address)}
+              </span>
+            ) : (
+              wallets.map((item, index) => (
+                <button
+                  key={`${item.name}-${index}`}
+                  onClick={() => connect(item)}
+                  className="rounded-full bg-[var(--ink)] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-black"
+                >
+                  Connect {item.name ?? "wallet"}
+                </button>
+              ))
+            )}
+          </div>
+          <p className="mt-5 break-words text-sm leading-relaxed text-[var(--muted)]">
+            {status}
+          </p>
+          {supported && account && (
+            <div className="mt-6 space-y-5">
+              <label className="mono block text-xs uppercase tracking-[.15em] text-[var(--muted)]">
+                Amount
+                <input
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  className="mt-2 w-full border-b border-[var(--border)] bg-transparent py-2 text-3xl font-medium outline-none focus:border-[var(--forest)]"
+                  inputMode="decimal"
+                />
+              </label>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={shield}
+                  className="rounded-full bg-[var(--forest)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#23481f]"
+                >
+                  Shield STRK
+                </button>
+                <button
+                  onClick={prepareStrategy}
+                  className="rounded-full border border-[var(--ink)] bg-white px-5 py-3 text-sm font-medium transition hover:bg-[#F5F5F2]"
+                >
+                  Preview {mode}
+                </button>
+                <button
+                  onClick={signStrategy}
+                  className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-medium text-white transition hover:bg-black"
+                >
+                  {mode === "forge"
+                    ? "2. Forge STRK to xSTRK"
+                    : mode === "reservoir"
+                    ? "2. Reservoir STRK to vSTRK"
+                    : "2. Prism STRK to ETH"}
+                </button>
+                <button
+                  onClick={() =>
+                    unshield(
+                      mode === "forge"
+                        ? ENDUR_XSTRK_ADDRESS
+                        : mode === "reservoir"
+                        ? VESU_VAULT_ADDRESS
+                        : process.env.NEXT_PUBLIC_ETH_ADDRESS ??
+                            "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+                      mode === "forge"
+                        ? "xSTRK"
+                        : mode === "reservoir"
+                        ? "vSTRK"
+                        : "ETH"
+                    )
+                  }
+                  className="rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-medium transition hover:border-[var(--ink)]"
+                >
+                  Unshield{" "}
+                  {mode === "forge"
+                    ? "xSTRK"
+                    : mode === "reservoir"
+                    ? "vSTRK"
+                    : "ETH"}
+                </button>
+                <button
+                  onClick={() => unshield(STRK_TOKEN_ADDRESS, "STRK")}
+                  className="rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-medium transition hover:border-[var(--ink)]"
+                >
+                  Unshield STRK
+                </button>
+                <button
+                  onClick={readBalances}
+                  className="rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-medium transition hover:border-[var(--ink)]"
+                >
+                  Read private balances
+                </button>
+              </div>
+              {balances.strk && (
+                <p className="mono text-sm font-medium text-[var(--forest)]">
+                  Private STRK {balances.strk} · xSTRK {balances.xstrk} · vSTRK{" "}
+                  {balances.vstrk} · ETH {balances.eth}
+                </p>
+              )}
+              {runtimePreview && (
+                <pre className="max-h-80 overflow-auto rounded-2xl bg-[#111] p-4 text-xs font-mono text-[#d8f3dc]">
+                  {runtimePreview}
+                </pre>
+              )}
+              {pendingActions && (
+                <button
+                  onClick={() =>
+                    submit(pendingActions.actions, pendingActions.label)
+                  }
+                  className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-medium text-white transition hover:bg-black"
+                >
+                  Sign resolved {mode} route
+                </button>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </section>
+    </main>
+  );
 }
