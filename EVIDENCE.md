@@ -2,7 +2,7 @@
 
 MantissaRouter V2 is deployed on Starknet mainnet and the evidence ledger is rendered by `/proof`. The repository contains verified deployment receipts, protocol target research, bounded Vesu Reservoir and AVNU Prism builders, and wallet-resolved runtime preview support.
 
-Confirmed deployment and lifecycle evidence is recorded in `strk20.json`; explorer links are generated for every ledger entry. The first complete human-operated cycle is now receipt-confirmed: shield STRK, private Forge to Endur xSTRK, and unshield STRK.
+Confirmed deployment and lifecycle evidence is recorded in `strk20.json`; explorer links are generated for every ledger entry. Receipt-confirmed mainnet evidence now covers shield STRK, private Forge to Endur xSTRK, unshield STRK, and Prism (STRK → AVNU ETH through MantissaRouter V2). Reservoir is in progress: pre-flighted and blocked at the Vesu protocol layer as built, with no receipt claimed.
 
 When the human operator supplies the RPC and deployer credentials, record for every action:
 
@@ -19,3 +19,4 @@ When the human operator supplies the RPC and deployer credentials, record for ev
 | Shield STRK | `0x04bee88e5e6e225cd8fd20b7cc6451242d87b6b18334d722555b6414ad908eb0` | Accepted on L2, execution succeeded |
 | Forge STRK → Endur xSTRK | `0x06e12ee7283684c905f6138b511a00588b67e64bdc543af1925c393e3dd07333` | Accepted on L2, execution succeeded |
 | Unshield STRK | `0x045839af41522f063b3cd5e15a6bb87ceb53655e7150ff0a08258e0c046fc8f9` | Accepted on L2, execution succeeded |
+| Prism STRK → AVNU output (ETH) | `0x78815ce99e5279f44f2544669b5f4ad7a333b7535f22103b137a1a85e0aa6b3` | Accepted on L2, execution succeeded |

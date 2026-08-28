@@ -2,7 +2,6 @@ node_modules/
 .next/
 out/
 .env.local
-router-deployment.json
 *.log
 *.tsbuildinfo
 contracts/target/
@@ -16,3 +15,7 @@ references/
 docs/*
 !docs/assets/
 .vercel
+
+# Local toolchain (Scarb, snforge) installed for verification
+.tools/
+

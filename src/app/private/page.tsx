@@ -26,8 +26,10 @@ import {
 } from "@/lib/strk20";
 import {
   buildAvnuRecipe,
+  buildRecipe,
   buildVesuRecipe,
   encodePlan,
+  strategies,
   type Plan,
 } from "@/lib/recipes";
 import {
@@ -48,6 +50,7 @@ export default function PrivatePage() {
   const [account, setAccount] = useState<WalletAccountV6>();
   const [supported, setSupported] = useState<boolean>();
   const [mode, setMode] = useState<StrategyMode>("forge");
+  const [executor, setExecutor] = useState<"router" | "endur">("router");
   const [amount, setAmount] = useState("10");
   const [status, setStatus] = useState("Connect a privacy-enabled wallet to begin.");
   const [balances, setBalances] = useState({ strk: "", xstrk: "", vstrk: "", eth: "" });
@@ -174,7 +177,20 @@ export default function PrivatePage() {
   }
 
   async function buildStrategyActions(raw: bigint): Promise<STRK20_ACTION[]> {
-    if (mode === "forge") return forgeActions(raw);
+    if (mode === "forge") {
+      if (executor === "router") {
+        if (!ROUTER_ADDRESS) throw new Error("Mantissa Router is not configured.");
+        const forgeStrategy = strategies.find((candidate) => candidate.slug === "forge");
+        if (!forgeStrategy || !ENDUR_XSTRK_ADDRESS)
+          throw new Error("Endur xSTRK is not configured.");
+        return routerActions(
+          buildRecipe(forgeStrategy, raw, ENDUR_XSTRK_ADDRESS),
+          raw,
+          ENDUR_XSTRK_ADDRESS
+        );
+      }
+      return forgeActions(raw);
+    }
     if (mode === "reservoir")
       return routerActions(buildVesuRecipe(raw), raw, VESU_VAULT_ADDRESS);
     if (!AVNU_PRIVATE_EXECUTOR_ADDRESS)
@@ -428,6 +444,28 @@ export default function PrivatePage() {
           </p>
           {supported && account && (
             <div className="mt-6 space-y-5">
+              {mode === "forge" && (
+                <div className="flex flex-wrap gap-2 pb-4">
+                  {(["router", "endur"] as const).map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setExecutor(option);
+                        setPendingActions(undefined);
+                      }}
+                      className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-150 ${
+                        executor === option
+                          ? "border-[var(--forest)] bg-[#E8F0E6] text-[var(--forest)]"
+                          : "border-[var(--border)] bg-white text-[var(--ink)] hover:border-[var(--ink)]"
+                      }`}
+                    >
+                      {option === "router"
+                        ? "Via MantissaRouter V2"
+                        : "Via Endur anonymizer (direct)"}
+                    </button>
+                  ))}
+                </div>
+              )}
               <label className="mono block text-xs uppercase tracking-[.15em] text-[var(--muted)]">
                 Amount
                 <input

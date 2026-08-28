@@ -1,0 +1,10 @@
+﻿node_modules
+.next
+.tools
+contracts/target
+contracts/.snfoundry_cache
+references
+.env.local
+.env.local.example
+*.log
+*.tsbuildinfo
