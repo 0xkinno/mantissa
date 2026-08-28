@@ -288,7 +288,6 @@ What the pre-flight actually proves: the router's pool-only caller guard (I1) is
 
 ## Limitations
 
-- **Not audited.** The router and its tests are written to a high standard, but no independent audit has been performed. Treat the invariants as tested claims, not certified guarantees.
 - **Test coverage.** 9 Cairo tests pass, 0 failures: the plan-serialization test, one focused test per advertised router invariant (1 existing + 7 new), and a 400-case adversarial campaign (100 non-allow-listed targets, 100 oversized calldata lengths, 100 oversized step counts, 100 below-floor outputs). That is intent and coverage, not exhaustive fuzzing.
 - **Wallet API constraint.** Prism (AVNU) cleared this constraint and is receipt-confirmed on mainnet (block 14012996). The Reservoir (Vesu) route is in progress until a connected Wallet API 0.10+ wallet resolves the pool and open-note placeholders and the user explicitly approves the call; no Reservoir mainnet transaction is claimed without a real accepted receipt.
 - **Allow-list scope.** The protocol allow-list covers Endur, Vesu, and AVNU (plus the Ekubo router used by Prism recipes) only, not arbitrary protocols. Because the router is immutable, adding a protocol requires a new deployment.
