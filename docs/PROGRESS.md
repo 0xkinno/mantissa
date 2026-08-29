@@ -17,7 +17,12 @@
 - `scripts/verify-mainnet.mjs` re-derived every checklist item from receipt events: STRK20 pool touched, MantissaRouter invoked via `privacy_invoke`, protocol allow-list passed (MantissaRouter V2 address matched), ETH output note created, zero residue, minimum output threshold cleared.
 - Prism is the first receipt-confirmed mainnet execution of MantissaRouter V2.
 
-### Reservoir status (2026-08-28)
+### Reservoir status (2026-08-28) — superseded 2026-08-29 by the receipt below
 
 - In progress. Pre-flight verified the allow-listed Vesu v-token `deposit()` accepts only its pool extension as caller (`'not-allowed'` on live mainnet state).
 - A working Reservoir needs a pool-targeted recipe (Vesu pool `modify_position`) and a router redeploy with the Vesu pool allow-listed. No mainnet receipt is claimed.
+### Reservoir mainnet receipt (2026-08-29)
+
+- Reservoir executed through MantissaRouter V3 on mainnet: `0x06f749fafee519140c48f57d1882b04f3107fb453728d84d57bc0aa63c85acc8`, ACCEPTED_ON_L2 · SUCCEEDED, block 14038277. STRK in → Vesu vSTRK out; approvals reset to zero; router balance ends at zero.
+- `scripts/verify-mainnet.mjs` re-derived every checklist item from receipt events: STRK20 pool touched, MantissaRouter invoked via `privacy_invoke`, protocol allow-list passed (MantissaRouter V3 / Vesu V2 vSTRK v-token matched), Vesu vSTRK output note created, zero residue, minimum output threshold cleared.
+- Reservoir is the first receipt-confirmed mainnet execution of MantissaRouter V3. All three strategies (Forge, Reservoir, Prism) plus shield and unshield are now receipt-confirmed on mainnet; `verify-mainnet.mjs --all` re-derives 5 of 5.

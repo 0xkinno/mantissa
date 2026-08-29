@@ -1,8 +1,8 @@
 # Evidence ledger
 
-MantissaRouter V2 is deployed on Starknet mainnet and the evidence ledger is rendered by `/proof`. The repository contains verified deployment receipts, protocol target research, bounded Vesu Reservoir and AVNU Prism builders, and wallet-resolved runtime preview support.
+MantissaRouter V2 and V3 are deployed on Starknet mainnet and the evidence ledger is rendered by `/proof`. The repository contains verified deployment receipts, protocol target research, bounded Vesu Reservoir and AVNU Prism builders, and wallet-resolved runtime preview support.
 
-Confirmed deployment and lifecycle evidence is recorded in `strk20.json`; explorer links are generated for every ledger entry. Receipt-confirmed mainnet evidence now covers shield STRK, private Forge to Endur xSTRK, unshield STRK, and Prism (STRK → AVNU ETH through MantissaRouter V2). Reservoir is pre-flight clean on live mainnet state through MantissaRouter V3 (Vesu V2 vSTRK ERC-4626 deposit, allow-listed as target and output, minting vSTRK to the router); no Reservoir mainnet receipt is claimed yet.
+Confirmed deployment and lifecycle evidence is recorded in `strk20.json`; explorer links are generated for every ledger entry. Receipt-confirmed mainnet evidence now covers shield STRK, private Forge to Endur xSTRK, unshield STRK, Prism (STRK → AVNU ETH through MantissaRouter V2), and Reservoir (STRK → Vesu vSTRK through MantissaRouter V3, `0x06f749fa...c85acc8`, block 14038277) — all five lifecycle transactions re-derive clean from receipts.
 
 When the human operator supplies the RPC and deployer credentials, record for every action:
 

@@ -18,6 +18,6 @@ MANTISSA never receives a viewing key or private key. Shield, private Forge, bal
 ## Known limitations
 
 - Mainnet lifecycle evidence depends on a user-approved STRK20-capable wallet session.
-- Reservoir and Prism remain disabled until exact live calldata and output mappings are verified.
+- Reservoir and Prism were gated until exact live calldata and output mappings were verified; both are now receipt-confirmed on mainnet (Prism block 14012996, Reservoir block 14038277).
 - The router is immutable; changing the allow-list requires a new deployment.
 - No APY or gas ceiling is enforced on-chain; UI copy must treat quoted APY as informational.

@@ -1,4 +1,4 @@
-﻿import fs from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 import { hash } from "starknet";
 const env = {};
@@ -20,7 +20,7 @@ const sel = (n) => "0x" + BigInt(hash.getSelectorFromName(n)).toString(16);
 const short = (v) => "0x" + BigInt(v).toString(16);
 const trim = (v) => short(v).slice(0, 12);
 const u256 = (v) => [short(v & ((1n << 128n) - 1n)), short(v >> 128n)];
-const amount = BigInt(env.SIM_AMOUNT || "10000000000000000000");
+let amount = BigInt(env.SIM_AMOUNT || "10000000000000000000");
 const DEPOSIT = sel("deposit");
 const PRIVACY_INVOKE = sel("privacy_invoke");
 const MULTI_ROUTE_SWAP = sel("multi_route_swap");
@@ -49,6 +49,15 @@ async function rpc(method, params) {
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
   });
   return res.json();
+}
+async function strkBalance(address) {
+  const out = await rpc("starknet_call", [{
+    contract_address: STRK,
+    entry_point_selector: "0x" + BigInt(hash.getSelectorFromName("balanceOf")).toString(16),
+    calldata: [short(address)],
+  }, "latest"]);
+  if (out.error || !Array.isArray(out.result)) return null;
+  return BigInt(out.result[0] ?? "0x0") + (BigInt(out.result[1] ?? "0x0") << 128n);
 }
 async function getNonce(address) {
   const out = await rpc("starknet_getNonce", ["latest", short(address)]);
@@ -264,8 +273,15 @@ async function preflightPrism() {
 
 async function main() {
   const target = process.argv[2] ?? "--all";
-  console.log(`pre-flight simulator · MantissaRouter V2 ${trim(ROUTER)} · pool ${trim(POOL)} · ${RPC.includes("alchemy") ? "Alchemy mainnet" : "configured RPC"}`);
+  console.log(`pre-flight simulator · MantissaRouter ${trim(ROUTER)} · pool ${trim(POOL)} · ${RPC.includes("alchemy") ? "Alchemy mainnet" : "configured RPC"}`);
   console.log(`simulating router plan(s) with ${Number(amount) / 1e18} STRK funding (no gas spent)\n`);
+  const requested = amount;
+  const held = await strkBalance(FUNDER).catch(() => null);
+  if (held !== null && held < requested) {
+    amount = held > 1n ? held - 1n : 0n;
+    console.log(`NOTE funder ${trim(FUNDER)} holds ${Number(held) / 1e18} STRK < requested ${Number(requested) / 1e18}; clamping simulation to ${Number(amount) / 1e18} STRK`);
+    console.log("");
+  }
   const jobs = [];
   if (target === "forge" || target === "--all") jobs.push(["forge", preflightForge]);
   if (target === "reservoir" || target === "--all") jobs.push(["reservoir", preflightReservoir]);
@@ -281,7 +297,7 @@ async function main() {
     }
     console.log();
   }
-  const exec = jobs.filter(([, fn]) => fn.executable).length;
-console.log(`${clean}/${jobs.length} router plan(s) fully pre-flight clean; forge and prism routes executable, reservoir pre-flight clean via Vesu V2 vSTRK deposit (see lines above)`);
+console.log(`${clean}/${jobs.length} router plan(s) fully pre-flight clean (see lines above)`);
+  process.exit(clean === jobs.length ? 0 : 1);
 }
 main().catch((error) => { console.error(error.message); process.exit(1); });

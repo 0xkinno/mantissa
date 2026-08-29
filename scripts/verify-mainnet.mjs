@@ -10,9 +10,9 @@
  *   node scripts/verify-mainnet.mjs --all
  *
  * `--all` runs the five lifecycle hashes: shield, Forge, unshield, Reservoir and
- * Prism. Reservoir is still pending until the human operator supplies a real
- * hash and is printed as `pending` rather than guessed at; Prism is
- * receipt-confirmed and verified from its real mainnet hash.
+ * Prism. All five are receipt-confirmed and re-derived from their real mainnet
+ * hashes; if a hash is missing from the ledger the slot prints as `pending`
+ * rather than being guessed at.
  */
 import fs from "node:fs";
 import { RpcProvider, hash, shortString } from "starknet";
@@ -92,7 +92,7 @@ function lifecycleHashes() {
     { label: "shield STRK", hash: hashes.find((h) => h.label.includes("shield"))?.hash },
     { label: "Forge STRK → Endur xSTRK", hash: hashes.find((h) => h.label.includes("Forge"))?.hash },
     { label: "unshield STRK", hash: hashes.find((h) => h.label.includes("unshield"))?.hash },
-    { label: "Reservoir STRK → Vesu vSTRK", hash: undefined },
+    { label: "Reservoir STRK → Vesu vSTRK", hash: hashes.find((h) => h.label.includes("Reservoir"))?.hash },
     { label: "Prism STRK → AVNU output", hash: hashes.find((h) => h.label.includes("Prism"))?.hash },
   ];
 }
@@ -275,7 +275,7 @@ async function verifyRouterPin(provider) {
   const onchain = await provider.getClassHashAt(deployment.routerAddress).catch(() => null);
   const ok = onchain !== null && short(onchain) === recorded;
   console.log(
-    `${ok ? "ok  " : "FAIL"} MantissaRouter V2 class hash pinned (on-chain ${onchain ? short(onchain) : "unreadable"} ${ok ? "matches" : "≠"} recorded ${recorded})`
+    `${ok ? "ok  " : "FAIL"} MantissaRouter class hash pinned (on-chain ${onchain ? short(onchain) : "unreadable"} ${ok ? "matches" : "≠"} recorded ${recorded})`
   );
   return ok;
 }

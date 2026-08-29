@@ -40,6 +40,12 @@
       "hash": "0x78815ce99e5279f44f2544669b5f4ad7a333b7535f22103b137a1a85e0aa6b3",
       "network": "SN_MAIN",
       "status": "ACCEPTED_ON_L2 / SUCCEEDED"
+    },
+    {
+      "kind": "private Reservoir STRK to Vesu vSTRK via MantissaRouter V3",
+      "hash": "0x06f749fafee519140c48f57d1882b04f3107fb453728d84d57bc0aa63c85acc8",
+      "network": "SN_MAIN",
+      "status": "ACCEPTED_ON_L2 / SUCCEEDED"
     }
   ],
   "contracts": [

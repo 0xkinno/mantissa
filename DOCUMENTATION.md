@@ -42,9 +42,9 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
   unblocked 2026-08-29 by moving to the Vesu V2 vSTRK v-token
   (`0x6d6d2bf9...`, public ERC-4626 `deposit`) and redeploying the router as
   MantissaRouter V3 with the new v-token allow-listed; the exact router step
-  simulates clean on live mainnet state and mints vSTRK to the router. A
-  mainnet receipt is still pending; placeholder hashes are not claimed as
-  evidence.
+  simulates clean on live mainnet state and mints vSTRK to the router.
+  Receipt-confirmed on mainnet 2026-08-29 (block 14038277); see the Reservoir
+  receipt bullet below.
 - **Prism mainnet receipt (2026-08-28).** Prism executed through MantissaRouter V2
   on mainnet: `0x78815ce99e5279f44f2544669b5f4ad7a333b7535f22103b137a1a85e0aa6b3`
   (ACCEPTED_ON_L2 · SUCCEEDED · block 14012996). `scripts/verify-mainnet.mjs`
@@ -52,8 +52,16 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
   MantissaRouter invoked via `privacy_invoke`, protocol allow-list passed, ETH
   output note created, zero residue, minimum output threshold cleared. This is
   the first receipt-confirmed mainnet execution of MantissaRouter V2.
+- **Reservoir mainnet receipt (2026-08-29).** Reservoir executed through
+  MantissaRouter V3 on mainnet: `0x06f749fafee519140c48f57d1882b04f3107fb453728d84d57bc0aa63c85acc8`
+  (ACCEPTED_ON_L2 · SUCCEEDED · block 14038277). `scripts/verify-mainnet.mjs`
+  re-derived every checklist item from receipt events: STRK20 pool touched,
+  MantissaRouter invoked via `privacy_invoke`, protocol allow-list passed
+  (Vesu V2 vSTRK v-token matched), Vesu vSTRK output note created, zero
+  residue, minimum output threshold cleared. This is the first
+  receipt-confirmed mainnet execution of MantissaRouter V3.
 
-- **MantissaRouter V2 pre-flight (2026-08-28).** `scripts/simulate-router.mjs` builds each router plan exactly as MantissaRouter executes it and simulates it against live mainnet RPC state (no gas spent). Result: Forge (Endur xSTRK) settles clean; Prism (AVNU) route verified — AVNU `multi_route_swap` enforces `beneficiary == caller`, and the recipe pins the beneficiary to MantissaRouter; Reservoir (Vesu) verified **blocked at the protocol layer** — the allow-listed v-token `deposit()` accepts only its pool extension as caller (`'not-allowed'` on live mainnet state). Output embedded in README § Router V2 Pre-Flight.
+- **MantissaRouter V2 pre-flight (2026-08-28).** `scripts/simulate-router.mjs` builds each router plan exactly as MantissaRouter executes it and simulates it against live mainnet RPC state (no gas spent). Result: Forge (Endur xSTRK) settles clean; Prism (AVNU) route verified — AVNU `multi_route_swap` enforces `beneficiary == caller`, and the recipe pins the beneficiary to MantissaRouter; Reservoir (Vesu) verified **blocked at the protocol layer** — the allow-listed v-token `deposit()` accepts only its pool extension as caller (`'not-allowed'` on live mainnet state). Output embedded in README § Router V2 Pre-Flight. Superseded 2026-08-29: Reservoir is now receipt-confirmed via the Vesu V2 v-token swap (see [D-002](DECISIONS.md)).
 - **Prism recipe fix (2026-08-28).** `buildAvnuRecipe` now pins the `multi_route_swap` beneficiary (calldata[8]) to MantissaRouter and derives the router's own minimum-output floor (99% of the quoted buy amount). `npm run typecheck` passes.
 - **Class-hash pin (2026-08-28).** `scripts/verify-mainnet.mjs` now re-reads the deployed router's on-chain class hash and compares it to `router-deployment.json`: on-chain `0x6111c076…2db6b` matches the record.
 - **Adversarial campaign test (2026-08-28).** A ninth Cairo test runs 400 hostile cases (100 non-allow-listed targets, 100 oversized calldata lengths, 100 oversized step counts, 100 below-floor outputs). `snforge test`: **9 passed, 0 failed**.
@@ -63,7 +71,7 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
 
 | Artifact | How it was verified |
 |---|---|
-| Shield / Forge / Unshield / Prism hashes | `node scripts/verify-mainnet.mjs <hash> …` re-derives each item from receipt events on `SN_MAIN` |
+| Shield / Forge / Unshield / Prism / Reservoir hashes | `node scripts/verify-mainnet.mjs <hash> …` re-derives each item from receipt events on `SN_MAIN` |
 | Router deployment | `router-deployment.json` records class hash, deploy tx, allow-list, and output-token allow-list |
 | Router invariants | 9 Cairo tests incl. 400-case adversarial campaign (`snforge test`) — **9 passed, 0 failed** (2026-08-28) |
 | Protocol targets | Endur, Vesu, and AVNU addresses pinned in `src/lib/config.ts` and `.env.local.example` |
@@ -87,10 +95,9 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
 ## Honest scope
 
 Receipt-proven evidence now covers the STRK20-pool-to-Endur path (Forge, via the
-Endur deposit anonymizer) and the STRK20-pool-to-AVNU path (Prism, executed
-through MantissaRouter V2 at block 14012996). Reservoir has no receipt-confirmed
-mainnet transaction yet. Its recipe is now pre-flight clean on live mainnet
-state (Vesu V2 vSTRK minted to the router via MantissaRouter V3, verified
-2026-08-29), but no receipt is claimed until a real, wallet-approved mainnet
-transaction exists. See the **Limitations**
+Endur deposit anonymizer), the STRK20-pool-to-AVNU path (Prism, executed
+through MantissaRouter V2 at block 14012996), and the STRK20-pool-to-Vesu path
+(Reservoir, executed through MantissaRouter V3 at block 14038277). All five
+lifecycle slots (shield, Forge, unshield, Reservoir, Prism) re-derive clean
+from mainnet receipts. See the **Limitations**
 section of [README.md](README.md) for the full, honest scope.
