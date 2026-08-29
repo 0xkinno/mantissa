@@ -97,7 +97,7 @@ STRK20 PRIVACY POOL ---> private STRK note ---> strategy execution
                                       PUBLIC RECIPIENT
 ```
 
-Forge is the case study documented end to end in this README: a full human-operated cycle, wallet-approved, mainnet-confirmed, with every transaction hash listed below. Prism runs the identical MantissaRouter execution path, gated behind the same seven invariants, and is now receipt-confirmed on mainnet through MantissaRouter V2 (see the [Verified Lifecycle Proof](#verified-lifecycle-proof) table). Reservoir is pre-flighted against live mainnet state in [Router V2 Pre-Flight](#router-v2-pre-flight) and is in progress. The honest per-strategy status is in the [Verified Lifecycle Proof](#verified-lifecycle-proof) table and the [Limitations](#limitations) section.
+Forge is the case study documented end to end in this README: a full human-operated cycle, wallet-approved, mainnet-confirmed, with every transaction hash listed below. Prism runs the identical MantissaRouter execution path, gated behind the same seven invariants, and is now receipt-confirmed on mainnet through MantissaRouter V2 (see the [Verified Lifecycle Proof](#verified-lifecycle-proof) table). Reservoir is pre-flighted against live mainnet state in [Router V2 Pre-Flight](#router-v2-pre-flight) and its fixed recipe (Vesu V2 vSTRK ERC-4626 deposit, allow-listed on MantissaRouter V3) settles clean on mainnet state; a mainnet receipt is still pending. The honest per-strategy status is in the [Verified Lifecycle Proof](#verified-lifecycle-proof) table and the [Limitations](#limitations) section.
 
 ---
 
@@ -110,10 +110,10 @@ Every claim below is independently verifiable on Starknet mainnet. Click any has
 | Shield STRK | [`0x04bee88e...ad908eb0`](https://voyager.online/tx/0x04bee88e5e6e225cd8fd20b7cc6451242d87b6b18334d722555b6414ad908eb0) | Accepted on L2, execution succeeded |
 | Forge: STRK to Endur xSTRK | [`0x06e12ee7...e3dd0733`](https://voyager.online/tx/0x06e12ee7283684c905f6138b511a00588b67e64bdc543af1925c393e3dd07333) | Accepted on L2, execution succeeded |
 | Unshield STRK | [`0x045839af...e0c046fc`](https://voyager.online/tx/0x045839af41522f063b3cd5e15a6bb87ceb53655e7150ff0a08258e0c046fc8f9) | Accepted on L2, execution succeeded |
-| Reservoir: STRK to Vesu vSTRK | in progress — no mainnet receipt yet | Pre-flighted; **blocked at the Vesu protocol layer as built** (see [Limitations](#limitations)) |
+| Reservoir: STRK to Vesu vSTRK | in progress — no mainnet receipt yet | Pre-flight clean on mainnet state (Vesu V2 vSTRK minted to router; see [Router V2 Pre-Flight](#router-v2-pre-flight)) |
 | Prism: STRK to AVNU output (ETH) | [`0x78815ce9...e0aa6b3`](https://voyager.online/tx/0x78815ce99e5279f44f2544669b5f4ad7a333b7535f22103b137a1a85e0aa6b3) | Accepted on L2, execution succeeded |
 
-The receipt-confirmed, human-operated cycle now covers shield → Forge → unshield and Prism (STRK → AVNU ETH through MantissaRouter V2), every step confirmed on mainnet by re-derived receipts above. Reservoir is pre-flighted against live mainnet state in [Router V2 Pre-Flight](#router-v2-pre-flight) and is in progress at the protocol layer; no mainnet receipt is claimed for it yet.
+The receipt-confirmed, human-operated cycle now covers shield → Forge → unshield and Prism (STRK → AVNU ETH through MantissaRouter V2), every step confirmed on mainnet by re-derived receipts above. Reservoir is pre-flighted against live mainnet state in [Router V2 Pre-Flight](#router-v2-pre-flight); its fixed recipe settles clean and mints Vesu V2 vSTRK to the router, but no mainnet receipt is claimed for it yet.
 
 The full, append-only evidence record lives in [strk20.json](strk20.json) and renders live at [`/proof`](https://mantissa-starknet.vercel.app/proof).
 
@@ -121,6 +121,7 @@ The full, append-only evidence record lives in [strk20.json](strk20.json) and re
 
 | Contract | Address | Network | Notes |
 |---|---|---|---|
+| MantissaRouter V3 (Reservoir allow-list) | [`0x74fc6126...b7f460bc`](https://voyager.online/contract/0x74fc61266f234638786bcacc057b6bc7129f8f08c0e2d21a199d5e0b7f460bc) | Starknet Mainnet | Deployed via [`0x16a3593f...8112c05dd`](https://voyager.online/tx/0x16a3593f453f7dfaabfe13fc338a11f253a3a0af2cd9bfb5afc12a8112c05dd); adds the Vesu V2 vSTRK v-token to the allow-list |
 | MantissaRouter V2 | [`0x327ce0db...56caddca`](https://voyager.online/contract/0x327ce0db2f6f0e6abbae89a69245313072dbd3676d0c8090e58e71e56caddca) | Starknet Mainnet | Deployed via [`0x744e395d...aa6cb3e`](https://voyager.online/tx/0x744e395dcfa21f5cefb41dc96e248f80bcaf98ae2d833dd2507b0db2aa6cb3e) |
 | STRK20 Privacy Pool | [`0x040337b1...776ffe812a`](https://voyager.online/contract/0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a) | Starknet Mainnet | Canonical STRK20 pool, not deployed by us |
 
@@ -197,7 +198,7 @@ MantissaRouter enforces the following on every execution, without exception:
 07  Protocol allow-list       Only verified Endur, Vesu, and AVNU contracts are callable
 ```
 
-Every strategy MANTISSA offers, Forge, Reservoir, and Prism, is only marked live once it has cleared this exact bar: a real, wallet-approved, mainnet-confirmed transaction through MantissaRouter. Forge and Prism have cleared it — Prism through MantissaRouter V2. Reservoir is blocked at the Vesu protocol layer as built and is in progress, stated plainly in [Limitations](#limitations). Forge remains the primary documented walkthrough; the Prism receipt is re-derived below.
+Every strategy MANTISSA offers, Forge, Reservoir, and Prism, is only marked live once it has cleared this exact bar: a real, wallet-approved, mainnet-confirmed transaction through MantissaRouter. Forge and Prism have cleared it — Prism through MantissaRouter V2. Reservoir is pre-flight clean on live mainnet state through MantissaRouter V3 (Vesu V2 vSTRK v-token deposit minting vSTRK to the router) and is awaiting a wallet-approved mainnet receipt, stated plainly in [Limitations](#limitations). Forge remains the primary documented walkthrough; the Prism receipt is re-derived below.
 
 ## What This Actually Proves
 
@@ -243,13 +244,13 @@ node scripts/verify-mainnet.mjs 0x04bee88e5e6e225cd8fd20b7cc6451242d87b6b18334d7
 ok   MantissaRouter V2 class hash pinned (on-chain 0x6111c076cbcf20e031a6972c539c9e235f32584d27c32376b45a51187e2db6b matches recorded 0x6111c076cbcf20e031a6972c539c9e235f32584d27c32376b45a51187e2db6b)
 ```
 
-**Becomes public.** That a shield, an unshield, or a strategy execution occurred. The protocol that was touched (Endur for the receipt-proven Forge path; AVNU for the receipt-proven Prism path; Vesu for the in-progress Reservoir builder). The router or anonymizer address that executed the step. The timing of each transaction: block number and finality. The amount withdrawn from the pool to the executing contract, the output note id, and its token.
+**Becomes public.** That a shield, an unshield, or a strategy execution occurred. The protocol that was touched (Endur for the receipt-proven Forge path; AVNU for the receipt-proven Prism path; Vesu for the pre-flight-clean Reservoir builder). The router or anonymizer address that executed the step. The timing of each transaction: block number and finality. The amount withdrawn from the pool to the executing contract, the output note id, and its token.
 
 **Stays private.** The total shielded balance, which the pool's ledger encrypts and only a wallet holding the viewing key can read. Which specific notes were spent: the pool publishes one-way nullifiers, and only the note owner can recognise a nullifier as theirs. The user's Starknet address as it relates to their private position: note ownership and withdrawal identity are encrypted in the pool's events, so observers cannot link a note to an address. Unrelated shielded activity, which produces no linkable identifier.
 
 **Reduces privacy anyway.** Deposits into and withdrawals out of the pool are public by protocol design; only movement inside the pool is shielded. A shield transaction publishes the depositor's address and amount. Timing correlation between a shield and a strategy execution can narrow the anonymity set if done back-to-back, so the documented flow shields ahead of time. The executing contract's address and the withdrawn amount are public on every strategy step.
 
-**What MANTISSA does not prove.** MantissaRouter cannot itself distinguish shielded-origin funds from a publicly-funded transfer to the router: capital that reaches the router by an ordinary public ERC-20 transfer is treated identically to capital the pool withdrew from private notes. On the receipt-proven mainnet Forge transaction the pool invoked the Endur deposit anonymizer rather than MantissaRouter V2, so that receipt proves the STRK20-pool-to-Endur path but does not by itself prove the router's guards executed on-chain; they are enforced in its Cairo source and covered one-to-one by the tests below. The receipt-proven Prism transaction did execute through MantissaRouter V2 — STRK in, ETH out, approvals reset to zero, zero residue — so the router's on-chain execution is proven for that path. Reservoir has no receipt-confirmed mainnet transaction yet, and the pool's `ExternalContractInvoked` event carries no calldata, so no verifier can prove the exact parameters of a strategy step, only the invoked contract, its entry point, and the events that resulted.
+**What MANTISSA does not prove.** MantissaRouter cannot itself distinguish shielded-origin funds from a publicly-funded transfer to the router: capital that reaches the router by an ordinary public ERC-20 transfer is treated identically to capital the pool withdrew from private notes. On the receipt-proven mainnet Forge transaction the pool invoked the Endur deposit anonymizer rather than MantissaRouter V2, so that receipt proves the STRK20-pool-to-Endur path but does not by itself prove the router's guards executed on-chain; they are enforced in its Cairo source and covered one-to-one by the tests below. The receipt-proven Prism transaction did execute through MantissaRouter V2 — STRK in, ETH out, approvals reset to zero, zero residue — so the router's on-chain execution is proven for that path. Reservoir has no receipt-confirmed mainnet transaction yet — its Vesu V2 vSTRK recipe is pre-flight clean on live mainnet state, but a receipt is required before it is claimed as evidence. And because the pool's `ExternalContractInvoked` event carries no calldata, no verifier can prove the exact parameters of a strategy step, only the invoked contract, its entry point, and the events that resulted.
 
 
 ## Router V2 Pre-Flight
@@ -257,49 +258,70 @@ ok   MantissaRouter V2 class hash pinned (on-chain 0x6111c076cbcf20e031a6972c539
 `scripts/simulate-router.mjs` builds each router plan exactly as MantissaRouter would execute it and simulates it against live mainnet RPC state — no gas is spent, and no line is trusted from an explorer or a tx status. The output is copy-pasteable into a verification log:
 
 ```text
-pre-flight simulator · MantissaRouter V2 0x327ce0db2f · pool 0x40337b1af3 · Alchemy mainnet
+pre-flight simulator - MantissaRouter V3 0x74fc61266f - pool 0x40337b1af3 - Alchemy mainnet
 simulating router plan(s) with 10 STRK funding (no gas spent)
 
-forge → Endur xSTRK
+forge -> Endur xSTRK
   ok   Protocol allow-list check passed (Endur xSTRK 0x28d709c875 matched deployed router allow-list)
   ok   Output token allow-listed (xSTRK 0x28d709c875)
-  ok   Strategy step simulated clean on mainnet state (Endur accepted the router's approve + deposit; 1 events)
-  ok   Router caller guard live on mainnet (I1 — non-pool caller rejected with MANTISSA_CALLER)
+  ok   Strategy step simulated clean on mainnet state (Endur accepted the router's approve + deposit; 8 events)
+  ok   Router caller guard live on mainnet (I1 - non-pool caller rejected with MANTISSA_CALLER)
 
-reservoir → Vesu vSTRK
-  ok   Protocol allow-list check passed (Vesu receipt/vault 0x37ae3f583c matched deployed router allow-list)
-  ok   Output token allow-listed (Vesu receipt (vSTRK) 0x37ae3f583c)
-  n/a  Protocol-level block verified: Vesu v-token deposit() accepts only its pool extension as caller ('not-allowed' on live mainnet state). MantissaRouter cannot impersonate the extension, so Reservoir needs a pool-targeted recipe (pool.modify_position) and a router redeploy with the Vesu pool allow-listed.
-  ok   Router caller guard live on mainnet (I1 — non-pool caller rejected with MANTISSA_CALLER)
+reservoir -> Vesu vSTRK (V2 v-token ERC-4626 deposit)
+  ok   Protocol allow-list check passed (Vesu V2 vSTRK v-token 0x6d6d2bf905 matched deployed router allow-list)
+  ok   Output token allow-listed (Vesu vSTRK (V2 v-token) 0x6d6d2bf905)
+  ok   Strategy step simulated clean on mainnet state (9 events)
+  ok   Output vSTRK minted to MantissaRouter (Transfer 0x0 -> 0x74fc61266f, 9.80947762735166 vSTRK for 10 STRK)
+  ok   Router caller guard live on mainnet (I1 - non-pool caller rejected with MANTISSA_CALLER)
 
-prism → AVNU ETH
+prism -> AVNU ETH
   ok   Protocol allow-list check passed (AVNU router 0x4270219d36 matched deployed router allow-list)
   ok   Output token allow-listed (ETH 0x49d36570d4)
   ok   AVNU build defaults beneficiary to the executor (0x426dcd1ab5); recipe pins it to MantissaRouter
-  ok   Beneficiary invariant satisfied (multi_route_swap calldata[8] pinned to MantissaRouter 0x327ce0db2f; AVNU requires beneficiary == caller and the router is the caller)
-  ok   AVNU quote/route settles clean on mainnet state when beneficiary == caller (verified by patched simulation; 1 events)
+  ok   Beneficiary invariant satisfied (multi_route_swap calldata[8] pinned to MantissaRouter 0x74fc61266f; AVNU requires beneficiary == caller and the router is the caller)
+  ok   AVNU quote/route settles clean on mainnet state when beneficiary == caller (verified by patched simulation; 12 events)
   ok   Unpatched AVNU build verified to fail AVNU's own beneficiary==caller check (build defaults to the executor; pin is required)
-  ok   Router caller guard live on mainnet (I1 — non-pool caller rejected with MANTISSA_CALLER)
+  ok   Router caller guard live on mainnet (I1 - non-pool caller rejected with MANTISSA_CALLER)
 
-3/3 router plan(s) fully pre-flight clean; forge and prism routes executable, reservoir verified blocked at protocol level (see lines above)
-```
+3/3 router plan(s) fully pre-flight clean; forge and prism routes executable, reservoir pre-flight clean via Vesu V2 vSTRK deposit (see lines above)
 
-What the pre-flight actually proves: the router's pool-only caller guard (I1) is live on mainnet; Forge's exact step (STRK approve → Endur xSTRK deposit) settles clean on mainnet state; Prism's AVNU route settles when `beneficiary == caller`, which the recipe satisfies by pinning the `multi_route_swap` beneficiary to MantissaRouter (the unpatched AVNU build defaults to the executor and reverts `'Beneficiary is not the caller'`); and Reservoir's allow-listed Vesu v-token rejects every non-extension caller with `'not-allowed'` on live mainnet state, so Reservoir is blocked at the protocol layer as built.
+What the pre-flight actually proves: the router's pool-only caller guard (I1) is live on mainnet; Forge's exact step (STRK approve → Endur xSTRK deposit) settles clean on mainnet state; Prism's AVNU route settles when `beneficiary == caller`, which the recipe satisfies by pinning the `multi_route_swap` beneficiary to MantissaRouter (the unpatched AVNU build defaults to the executor and reverts `'Beneficiary is not the caller'`); and Reservoir's fixed recipe (Vesu V2 vSTRK v-token ERC-4626 `deposit`, allow-listed on MantissaRouter V3) settles clean on live mainnet state and mints vSTRK directly to MantissaRouter, the same shape as the receipt-proven Forge path, so the router receives the output it deposits as the private note.
 
 ## Limitations
 
 - **Test coverage.** 9 Cairo tests pass, 0 failures: the plan-serialization test, one focused test per advertised router invariant (1 existing + 7 new), and a 400-case adversarial campaign (100 non-allow-listed targets, 100 oversized calldata lengths, 100 oversized step counts, 100 below-floor outputs). That is intent and coverage, not exhaustive fuzzing.
-- **Wallet API constraint.** Prism (AVNU) cleared this constraint and is receipt-confirmed on mainnet (block 14012996). The Reservoir (Vesu) route is in progress until a connected Wallet API 0.10+ wallet resolves the pool and open-note placeholders and the user explicitly approves the call; no Reservoir mainnet transaction is claimed without a real accepted receipt.
+```json
+{
+  "campaign": "invariant_adversarial_campaign_rejects_hostile_plans",
+  "total_cases": 400,
+  "accepted": 0,
+  "false_clearances": 0,
+  "sweeps": [
+    { "case": "non_allowlisted_target", "cases": 100, "rejected_with": "MANTISSA_NOT_ALLOWED", "false_clearances": 0 },
+    { "case": "oversized_calldata", "cases": 100, "rejected_with": "MANTISSA_CALLDATA", "false_clearances": 0 },
+    { "case": "oversized_step_count", "cases": 100, "rejected_with": "MANTISSA_STEPS", "false_clearances": 0 },
+    { "case": "below_floor_output", "cases": 100, "rejected_with": "MANTISSA_MIN_OUTPUT", "false_clearances": 0 }
+  ],
+  "snforge": { "tests": 9, "passed": 9, "failed": 0 }
+}
+```
+- **Wallet API constraint.** Prism (AVNU) cleared this constraint and is receipt-confirmed on mainnet (block 14012996). The Reservoir (Vesu) route is pre-flight clean on mainnet state and awaits a connected Wallet API 0.10+ wallet resolving the pool and open-note placeholders and the user explicitly approving the call; no Reservoir mainnet transaction is claimed without a real accepted receipt.
 - **Allow-list scope.** The protocol allow-list covers Endur, Vesu, and AVNU (plus the Ekubo router used by Prism recipes) only, not arbitrary protocols. Because the router is immutable, adding a protocol requires a new deployment.
-- **Mainnet evidence depth.** The receipt-proven lifecycle is shield → Forge (Endur xSTRK) → unshield, plus Prism (STRK → AVNU ETH through MantissaRouter V2). The Forge transaction ran through the Endur deposit anonymizer; the Prism transaction is the first receipt-confirmed mainnet execution of MantissaRouter V2. Reservoir remains in progress with no receipt claimed.
+- **Mainnet evidence depth.** The receipt-proven lifecycle is shield → Forge (Endur xSTRK) → unshield, plus Prism (STRK → AVNU ETH through MantissaRouter V2). The Forge transaction ran through the Endur deposit anonymizer; the Prism transaction is the first receipt-confirmed mainnet execution of MantissaRouter V2. Reservoir is pre-flight clean on mainnet state with no receipt claimed.
 - **No calldata disclosure.** The pool's `ExternalContractInvoked` event does not include calldata, so receipt re-derivation proves the invoked contract and entry point but not the exact parameters of a strategy step.
 
-- **Reservoir is blocked at the Vesu protocol layer.** The allow-listed Vesu v-token's `deposit()` accepts only its pool extension as the caller — simulating the exact router step on live mainnet state reverts `'not-allowed'`. The pool's real supply entrypoint is `modify_position` with a structured position payload, so a working Reservoir needs a pool-targeted recipe and a router redeploy with the Vesu pool allow-listed. Verified 2026-08-28.
-- **Prism requires a beneficiary pin.** AVNU's `multi_route_swap` enforces `beneficiary == caller`. The AVNU private build defaults the beneficiary to its private executor, which reverts `'Beneficiary is not the caller'` from any other caller; the recipe therefore pins the beneficiary to MantissaRouter. Verified 2026-08-28 in pre-flight, and receipt-confirmed on mainnet at block 14012996 (the pin held: AVNU settled with the router as beneficiary and caller).
+- **Reservoir required a Vesu V2 v-token swap.** The original allow-listed v-token (`0x037ae3...`) was a Vesu V2.1 receipt whose `deposit()` accepts only its pool extension as the caller (`'not-allowed'` on live mainnet state). Reservoir now targets the Vesu V2 vSTRK v-token (`0x6d6d2bf9...`, public ERC-4626 `deposit(assets, receiver)`): the exact router step simulates clean on mainnet and mints vSTRK to the router. This required a router redeploy (MantissaRouter V3) with the new v-token allow-listed as both target and output. A mainnet receipt is still pending. Verified 2026-08-29.
 
-See [DOCUMENTATION.md](DOCUMENTATION.md) for the full audit trail of recent updates and verifications.
+See [DECISIONS.md](DECISIONS.md) for the engineering decisions behind the router and [DOCUMENTATION.md](DOCUMENTATION.md) for the full audit trail of recent updates and verifications.
 
 ---
+
+
+## Upstream Contributions
+
+| Repo | Issue | What was reported | Status |
+| --- | --- | --- | --- |
+| [avnu-labs/avnu-sdk](https://github.com/avnu-labs/avnu-sdk) | [#337](https://github.com/avnu-labs/avnu-sdk/issues/337) | `multi_route_swap` beneficiary is pinned to the build taker and the on-chain `beneficiary == caller` constraint is undocumented, which reverts `'Beneficiary is not the caller'` for integrations that execute the built calldata from their own contract. Filed from the Prism debug session. | Open |
 
 ## Routes
 
@@ -316,7 +338,7 @@ See [DOCUMENTATION.md](DOCUMENTATION.md) for the full audit trail of recent upda
 Private yield is not a hackathon novelty. It is a permanent requirement for any serious DeFi participant on a transparent chain.
 
 ```
-NOW          Shield → Forge → unshield + Prism (AVNU ETH via MantissaRouter V2) receipt-proven on mainnet; Reservoir in progress.
+NOW          Shield → Forge → unshield + Prism (AVNU ETH via MantissaRouter V2) receipt-proven on mainnet; Reservoir pre-flight clean on mainnet state via MantissaRouter V3, awaiting a receipt.
 NEXT         Expanded strategy dashboard. Compound, multi-step strategies.
 LATER        Additional protocol support. Automated strategy rotation.
 BEYOND       Institutional API access. Cross-chain private yield.
@@ -331,6 +353,7 @@ npm install
 Copy-Item .env.local.example .env.local
 npm run typecheck
 npm run build
+node scripts/verify-all.mjs   # one-command full verification (typecheck, build, snforge, verify-mainnet, simulate-router)
 npm run dev
 ```
 
@@ -338,7 +361,7 @@ Set a Starknet RPC endpoint and the verified mainnet addresses in `.env.local`. 
 
 ## For Judges
 
-[Evidence](EVIDENCE.md) · [STRK20 Integration](STRK20_INTEGRATION.md)
+[Evidence](EVIDENCE.md) · [Decisions](DECISIONS.md) · [STRK20 Integration](STRK20_INTEGRATION.md)
 
 ## License
 

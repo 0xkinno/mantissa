@@ -21,10 +21,12 @@ try {
   classHash = match[1];
   declareTx = null;
 }
-// Endur's xSTRK contract is an ERC-4626-style vault: it is both the Forge
-// output token and the callable deposit endpoint used by Endur's own client.
-const targets = [env.NEXT_PUBLIC_AVNU_ROUTER_ADDRESS, env.NEXT_PUBLIC_AVNU_PRIVATE_EXECUTOR_ADDRESS, env.NEXT_PUBLIC_ENDUR_XSTRK_ADDRESS, env.NEXT_PUBLIC_VESU_VAULT_ADDRESS, env.NEXT_PUBLIC_EKUBO_ROUTER_ADDRESS].filter(Boolean);
-const outputTokens = [env.NEXT_PUBLIC_ENDUR_XSTRK_ADDRESS, env.NEXT_PUBLIC_VESU_RECEIPT_ADDRESS, env.NEXT_PUBLIC_STRK_TOKEN_ADDRESS, env.NEXT_PUBLIC_ETH_ADDRESS].filter(Boolean);
+// Endur's xSTRK is an ERC-4626-style vault: it is both the Forge output token
+// and the callable deposit endpoint. Vesu's V2 vSTRK is the same shape: the
+// v-token's deposit() pulls STRK from the caller and mints vSTRK to the receiver,
+// so it is allow-listed both as a Reservoir target and as an output token.
+const targets = [...new Set([env.NEXT_PUBLIC_AVNU_ROUTER_ADDRESS, env.NEXT_PUBLIC_AVNU_PRIVATE_EXECUTOR_ADDRESS, env.NEXT_PUBLIC_ENDUR_XSTRK_ADDRESS, env.NEXT_PUBLIC_VESU_VAULT_ADDRESS, env.NEXT_PUBLIC_VESU_RECEIPT_ADDRESS, env.NEXT_PUBLIC_EKUBO_ROUTER_ADDRESS].filter(Boolean))];
+const outputTokens = [...new Set([env.NEXT_PUBLIC_ENDUR_XSTRK_ADDRESS, env.NEXT_PUBLIC_VESU_RECEIPT_ADDRESS, env.NEXT_PUBLIC_VESU_VAULT_ADDRESS, env.NEXT_PUBLIC_STRK_TOKEN_ADDRESS, env.NEXT_PUBLIC_ETH_ADDRESS].filter(Boolean))];
 if (!env.NEXT_PUBLIC_ENDUR_XSTRK_ADDRESS) throw new Error("NEXT_PUBLIC_ENDUR_XSTRK_ADDRESS is required for Forge.");
 if (!env.NEXT_PUBLIC_VESU_RECEIPT_ADDRESS) throw new Error("NEXT_PUBLIC_VESU_RECEIPT_ADDRESS must be verified before the immutable router deployment.");
 const deployment = await account.deployContract({ classHash, constructorCalldata: [env.NEXT_PUBLIC_POOL_ADDRESS, targets.length.toString(), ...targets, outputTokens.length.toString(), ...outputTokens] });

@@ -154,12 +154,12 @@ export default function Home() {
   const roadmapItems = [
     {
       phase: "NOW",
-      desc: "Forge live on mainnet. Reservoir and Prism in guarded rollout.",
+      desc: "Forge live on mainnet. Prism receipt-proven. Reservoir in guarded rollout (pre-flight clean).",
       status: "active",
     },
     {
       phase: "NEXT",
-      desc: "Reservoir and Prism receipt-proven on mainnet. Compound strategies.",
+      desc: "Reservoir mainnet receipt. Compound strategies.",
       status: "upcoming",
     },
     {

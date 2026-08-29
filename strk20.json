@@ -54,8 +54,14 @@
       "address": "0x327ce0db2f6f0e6abbae89a69245313072dbd3676d0c8090e58e71e56caddca",
       "network": "SN_MAIN",
       "class_hash": "0x6111c076cbcf20e031a6972c539c9e235f32584d27c32376b45a51187e2db6b"
+    },
+    {
+      "name": "MantissaRouter V3 (Reservoir allow-list)",
+      "address": "0x74fc61266f234638786bcacc057b6bc7129f8f08c0e2d21a199d5e0b7f460bc",
+      "network": "SN_MAIN",
+      "class_hash": "0x6111c076cbcf20e031a6972c539c9e235f32584d27c32376b45a51187e2db6b"
     }
   ],
   "demo_video": "",
-  "demo_url": ""
+  "demo_url": "https://mantissa-starknet.vercel.app"
 }

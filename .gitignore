@@ -14,6 +14,8 @@ references/
 # Internal product instructions and planning documents (kept local)
 docs/*
 !docs/assets/
+!docs/PROGRESS.md
+!docs/SECURITY.md
 .vercel
 
 # Local toolchain (Scarb, snforge) installed for verification

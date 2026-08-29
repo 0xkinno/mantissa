@@ -13,7 +13,7 @@ const STRK = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
 const ETH = "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
 const POOL = "0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a";
 const ENDUR_XSTRK = "0x028d709c875c0ceac3dce7065bec5328186dc89fe254527084d1689910954b0a";
-const VESU_RECEIPT = "0x037ae3f583c8d644b7556c93a04b83b52fa96159b2b0cbd83c14d3122aef80a2";
+const VESU_VAULT = "0x6d6d2bf905dd199c78f2e421521d8473042737be9f47904e7578536c10f279d";
 const AVNU_ROUTER = env.NEXT_PUBLIC_AVNU_ROUTER_ADDRESS;
 const AVNU_EXECUTOR = env.NEXT_PUBLIC_AVNU_PRIVATE_EXECUTOR_ADDRESS;
 const sel = (n) => "0x" + BigInt(hash.getSelectorFromName(n)).toString(16);
@@ -31,13 +31,13 @@ const ALLOWED = new Set(deployment.allowedTargets.map((a) => short(a)));
 const ALLOWED_OUTPUTS = new Set(deployment.allowedOutputTokens.map((a) => short(a)));
 const TOKEN_NAMES = {
   [short(ENDUR_XSTRK)]: "xSTRK",
-  [short(VESU_RECEIPT)]: "Vesu receipt (vSTRK)",
+  [short(VESU_VAULT)]: "Vesu vSTRK (V2 v-token)",
   [short(STRK)]: "STRK",
   [short(ETH)]: "ETH",
 };
 const TARGET_NAMES = {
   [short(ENDUR_XSTRK)]: "Endur xSTRK",
-  [short(VESU_RECEIPT)]: "Vesu receipt/vault",
+  [short(VESU_VAULT)]: "Vesu V2 vSTRK v-token",
   [short(AVNU_ROUTER)]: "AVNU router",
   [short(AVNU_EXECUTOR)]: "AVNU private executor",
 };
@@ -87,10 +87,17 @@ async function simulate(txs) {
   const items = Array.isArray(out.result) ? out.result : out.result?.transaction_traces ?? [];
   return items.map((item) => {
     const exec = item.transaction_trace?.execute_invocation ?? item.execute_tx_trace ?? {};
+    const events = [];
+    (function walk(node, emitter) {
+      if (!node) return;
+      const here = node.contract_address ? short(node.contract_address) : emitter;
+      if (Array.isArray(node.events)) for (const e of node.events) events.push({ ...e, _from: here });
+      for (const c of node.calls ?? []) walk(c, here);
+    })(exec, null);
     return {
       revert: exec.revert_reason ?? item.revert_error ?? "",
       isReverted: Boolean(exec.is_reverted) || Boolean(exec.revert_reason || item.revert_error),
-      events: exec.events ?? item.events ?? [],
+      events,
     };
   });
 }
@@ -177,25 +184,35 @@ async function preflightForge() {
 
 async function preflightReservoir() {
   const plan = {
-    steps: [{ target: VESU_RECEIPT, selector: DEPOSIT, approvals: [{ token: STRK, amount }], calldata: [...u256(amount), short(ROUTER)] }],
-    outputs: [{ token: VESU_RECEIPT, noteId: 1n, minAmount: 1n }],
+    steps: [{ target: VESU_VAULT, selector: DEPOSIT, approvals: [{ token: STRK, amount }], calldata: [...u256(amount), short(ROUTER)] }],
+    outputs: [{ token: VESU_VAULT, noteId: 1n, minAmount: 1n }],
   };
-  console.log("reservoir → Vesu vSTRK");
+  console.log("reservoir -> Vesu vSTRK (V2 v-token ERC-4626 deposit)");
   const planOk = checkPlan(plan);
   const strategy = await simCalls([
-    { to: STRK, selector: APPROVE, calldata: [short(VESU_RECEIPT), ...u256(amount)] },
-    { to: VESU_RECEIPT, selector: DEPOSIT, calldata: [...u256(amount), short(ROUTER)] },
+    { to: STRK, selector: APPROVE, calldata: [short(VESU_VAULT), ...u256(amount)] },
+    { to: VESU_VAULT, selector: DEPOSIT, calldata: [...u256(amount), short(ROUTER)] },
   ]);
-  if (strategy.ok) {
-    console.log(`  ok   Strategy step simulated clean on mainnet state (${strategy.events.length} events)`);
-  } else if (/not-allowed/.test(strategy.message)) {
-    console.log(`  n/a  Protocol-level block verified: Vesu v-token deposit() accepts only its pool extension as caller ('not-allowed' on live mainnet state). MantissaRouter cannot impersonate the extension, so Reservoir needs a pool-targeted recipe (pool.modify_position) and a router redeploy with the Vesu pool allow-listed.`);
-  } else {
+  if (!strategy.ok) {
     console.log(`  FAIL Strategy step reverted on mainnet state: ${strategy.message}`);
+  } else {
+    console.log(`  ok   Strategy step simulated clean on mainnet state (${strategy.events.length} events)`);
+  }
+  // Prove the vSTRK mint (Transfer from 0x0) landed on MantissaRouter - the
+  // receipt is the router's balance, not the pool's. Events are attributed to
+  // their emitting contract while walking the trace call tree.
+  const all = strategy.events ?? [];
+  const TRANSFER = "0x" + BigInt(hash.getSelectorFromName("Transfer")).toString(16);
+  const mint = all.find((e) => e._from === short(VESU_VAULT) && short(e.keys?.[0]) === TRANSFER && short(e.keys?.[1]) === "0x0" && short(e.keys?.[2]) === short(ROUTER));
+  if (mint) {
+    const amt = BigInt(mint.data?.[0] ?? "0x0") + (BigInt(mint.data?.[1] ?? "0x0") << 128n);
+    console.log(`  ok   Output vSTRK minted to MantissaRouter (Transfer 0x0 -> ${trim(ROUTER)}, ${Number(amt) / 1e18} vSTRK for ${Number(amount) / 1e18} STRK)`);
+  } else {
+    console.log("  FAIL No vSTRK mint to MantissaRouter found in the strategy trace");
   }
   const guard = await liveGuardCheck(plan);
-  console.log(guard.ok ? "  ok   Router caller guard live on mainnet (I1 — non-pool caller rejected with MANTISSA_CALLER)" : `  FAIL Router guard check: ${guard.message}`);
-  return planOk && guard.ok && (strategy.ok || /not-allowed/.test(strategy.message));
+  console.log(guard.ok ? "  ok   Router caller guard live on mainnet (I1 - non-pool caller rejected with MANTISSA_CALLER)" : `  FAIL Router guard check: ${guard.message}`);
+  return planOk && strategy.ok && Boolean(mint) && guard.ok;
 }
 
 async function preflightPrism() {
@@ -265,6 +282,6 @@ async function main() {
     console.log();
   }
   const exec = jobs.filter(([, fn]) => fn.executable).length;
-console.log(`${clean}/${jobs.length} router plan(s) fully pre-flight clean; forge and prism routes executable, reservoir verified blocked at protocol level (see lines above)`);
+console.log(`${clean}/${jobs.length} router plan(s) fully pre-flight clean; forge and prism routes executable, reservoir pre-flight clean via Vesu V2 vSTRK deposit (see lines above)`);
 }
 main().catch((error) => { console.error(error.message); process.exit(1); });

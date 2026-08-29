@@ -14,6 +14,11 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
   receipt-confirmed on mainnet: shield STRK → private Forge to Endur xSTRK →
   unshield STRK. Hashes and status live in [strk20.json](strk20.json) and
   [EVIDENCE.md](EVIDENCE.md).
+- **MantissaRouter V3 deployed (2026-08-29).** Router at
+  `0x74fc61266f234638786bcacc057b6bc7129f8f08c0e2d21a199d5e0b7f460bc` (same
+  class `0x6111c076...2db6b`), deploy tx
+  `0x16a3593f453f7dfaabfe13fc338a11f253a3a0af2cd9bfb5afc12a8112c05dd`; adds the
+  Vesu V2 vSTRK v-token as both an allowed target and an allowed output token.
 - **MantissaRouter V2 deployed.** Router at
   `0x327ce0db2f6f0e6abbae89a69245313072dbd3676d0c8090e58e71e56caddca` (class
   `0x6111c076cbcf20e031a6972c539c9e235f32584d27c32376b45a51187e2db6b`), deploy tx
@@ -33,9 +38,13 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
   See [Security Invariants](README.md) and `contracts/tests/router_test.cairo`.
 - **Reservoir and Prism builders.** Bounded Vesu (Reservoir) and AVNU (Prism)
   recipes are implemented. Prism is receipt-confirmed on mainnet through
-  MantissaRouter V2 (block 14012996; hash below). Reservoir is blocked at the
-  Vesu protocol layer as built (2026-08-28 pre-flight) and is in progress;
-  placeholder hashes are not claimed as evidence.
+  MantissaRouter V2 (block 14012996; hash below). Reservoir's recipe was
+  unblocked 2026-08-29 by moving to the Vesu V2 vSTRK v-token
+  (`0x6d6d2bf9...`, public ERC-4626 `deposit`) and redeploying the router as
+  MantissaRouter V3 with the new v-token allow-listed; the exact router step
+  simulates clean on live mainnet state and mints vSTRK to the router. A
+  mainnet receipt is still pending; placeholder hashes are not claimed as
+  evidence.
 - **Prism mainnet receipt (2026-08-28).** Prism executed through MantissaRouter V2
   on mainnet: `0x78815ce99e5279f44f2544669b5f4ad7a333b7535f22103b137a1a85e0aa6b3`
   (ACCEPTED_ON_L2 · SUCCEEDED · block 14012996). `scripts/verify-mainnet.mjs`
@@ -63,6 +72,7 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
 ## Key files
 
 - [README.md](README.md) — product, evidence, invariants, privacy boundary, limitations
+- [DECISIONS.md](DECISIONS.md) — engineering decisions log (router V2→V3, Vesu v-token swap, AVNU beneficiary pin)
 - [EVIDENCE.md](EVIDENCE.md) — evidence ledger
 - [STRK20_INTEGRATION.md](STRK20_INTEGRATION.md) — primitive-by-primitive integration detail
 - [strk20.json](strk20.json) — append-only transaction/contract ledger
@@ -72,15 +82,15 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
 - [contracts/tests/router_test.cairo](contracts/tests/router_test.cairo) — invariant tests
 - [docs/PROGRESS.md](docs/PROGRESS.md) — build progress log
 - [docs/SECURITY.md](docs/SECURITY.md) — security review notes
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — architecture notes
-- [docs/COMPETITIVE_ANALYSIS.md](docs/COMPETITIVE_ANALYSIS.md) — competitor analysis
-- [docs/COMPETITOR_EVIDENCE.md](docs/COMPETITOR_EVIDENCE.md) — capability comparison
+
 
 ## Honest scope
 
 Receipt-proven evidence now covers the STRK20-pool-to-Endur path (Forge, via the
 Endur deposit anonymizer) and the STRK20-pool-to-AVNU path (Prism, executed
 through MantissaRouter V2 at block 14012996). Reservoir has no receipt-confirmed
-mainnet transaction and remains in progress: pre-flight (2026-08-28) confirms its
-route is blocked at the Vesu protocol layer as built. See the **Limitations**
+mainnet transaction yet. Its recipe is now pre-flight clean on live mainnet
+state (Vesu V2 vSTRK minted to the router via MantissaRouter V3, verified
+2026-08-29), but no receipt is claimed until a real, wallet-approved mainnet
+transaction exists. See the **Limitations**
 section of [README.md](README.md) for the full, honest scope.

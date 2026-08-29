@@ -30,18 +30,20 @@ const formatUnits = (raw, decimals = 18) => {
 const POOL = "0x040337b1af3c663e86e333bab5a4b28da8d4652a15a69beee2b677776ffe812a";
 const STRK = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
 const ROUTER = "0x327ce0db2f6f0e6abbae89a69245313072dbd3676d0c8090e58e71e56caddca";
+const ROUTER_V3 = "0x74fc61266f234638786bcacc057b6bc7129f8f08c0e2d21a199d5e0b7f460bc";
 const ENDUR_ANONYMIZER = "0x030dee638065962eb3642ca54aa48e9e2cd98536bc90b64b99bb306c1db30698";
 const ENDUR_XSTRK = "0x028d709c875c0ceac3dce7065bec5328186dc89fe254527084d1689910954b0a";
-const VESU_RECEIPT = "0x037ae3f583c8d644b7556c93a04b83b52fa96159b2b0cbd83c14d3122aef80a2";
+const VESU_RECEIPT = "0x6d6d2bf905dd199c78f2e421521d8473042737be9f47904e7578536c10f279d";
 const VESU_POOL = "0x0451fe483d5921a2919ddd81d0de6696669bccdacd859f72a4fba7656b97c3b5";
 const AVNU_ROUTER = "0x04270219d365d6b017231b52e92b3fb5d7c8378b05e9abc97724537a80e93b0f";
 const AVNU_EXECUTOR = "0x0426dcd1ab5fa2f852f138d07cb37708b00a4db999677fe2d0c9a440702dbe5e";
 
 const ALLOW_LIST = {
   "MantissaRouter V2": ROUTER,
+  "MantissaRouter V3 (Reservoir)": ROUTER_V3,
   "Endur deposit anonymizer": ENDUR_ANONYMIZER,
   "Endur xSTRK": ENDUR_XSTRK,
-  "Vesu receipt/vault": VESU_RECEIPT,
+  "Vesu V2 vSTRK v-token": VESU_RECEIPT,
   "Vesu pool": VESU_POOL,
   "AVNU router": AVNU_ROUTER,
   "AVNU private executor": AVNU_EXECUTOR,
@@ -50,7 +52,7 @@ const ALLOWED = new Set(Object.values(ALLOW_LIST).map((a) => short(a)));
 const OUTPUT_TOKENS = {
   "xSTRK": ENDUR_XSTRK,
   "STRK": STRK,
-  "Vesu vSTRK": VESU_RECEIPT,
+  "Vesu vSTRK (V2 v-token)": VESU_RECEIPT,
   "ETH": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
 };
 const OUTPUT_SET = new Set(Object.values(OUTPUT_TOKENS).map((a) => short(a)));
@@ -218,7 +220,7 @@ async function verifyLifecycle(provider, entry) {
   } else {
     const allowName = Object.entries(ALLOW_LIST).find(([, v]) => short(v) === invocation.contract)?.[0] ?? null;
     const allowOk = ALLOWED.has(invocation.contract) && invocation.name !== null;
-    const who = norm(invocation.contract) === norm(ROUTER) ? "MantissaRouter" : allowName ?? describeAddress(invocation.contract);
+    const who = norm(invocation.contract) === norm(ROUTER) || norm(invocation.contract) === norm(ROUTER_V3) ? "MantissaRouter" : allowName ?? describeAddress(invocation.contract);
     lines.push(
       `${allowOk ? "ok  " : "FAIL"} ${who} invoked via ${invocation.name ?? invocation.entrypoint}`
     );
@@ -300,10 +302,12 @@ async function main() {
   console.log(`verifying ${entries.length} transaction(s) against pool ${POOL} on ${chainName}\n`);
 
   let okCount = 0;
+  let pendingCount = 0;
   for (const entry of entries) {
     try {
       const result = await verifyLifecycle(provider, entry);
       if (result.ok) okCount += 1;
+      else if (result.pending) pendingCount += 1;
     } catch (error) {
       printBlock(entry.hash ?? "0x?", entry.label, [
         `FAIL  unreadable receipt: ${(error instanceof Error ? error.message : String(error)).slice(0, 100)}`,
@@ -313,9 +317,9 @@ async function main() {
 
   const pinOk = await verifyRouterPin(provider);
 
-  console.log(`\n${okCount} of ${entries.length} lifecycle transactions re-derived from receipts.`);
+  console.log(`\n${okCount} of ${entries.length} lifecycle transactions re-derived from receipts.${pendingCount ? ` (${pendingCount} pending, not failures)` : ""}`);
   console.log(`${pinOk ? "ok" : "FAIL"} router class-hash pin against deployment record.`);
-  if (okCount < entries.length || !pinOk) process.exitCode = 1;
+  if (okCount + pendingCount < entries.length || !pinOk) process.exitCode = 1;
 }
 
 await main();

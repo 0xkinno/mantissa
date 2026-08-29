@@ -6,6 +6,7 @@ export type Step = { target: Felt; selector: Felt; approvals: Approval[]; callda
 export type Output = { token: Felt; noteId: Felt; minAmount: bigint };
 export type Plan = { steps: Step[]; outputs: Output[] };
 export const normAddr = (value: Felt): string => `0x${BigInt(value).toString(16)}`;
+export const u256 = (value: bigint): Felt[] => [value & ((1n << 128n) - 1n), value >> 128n];
 
 export const POOL_PLACEHOLDER = "${poolAddress}";
 export const OPEN_NOTE = (index: number) => `\${openNoteIds[${index}]}`;
@@ -30,11 +31,11 @@ export function buildRecipe(strategy: Strategy, amount: bigint, outputToken: str
   if (!ROUTER_ADDRESS) throw new Error("Mantissa Router is not deployed yet. Configure NEXT_PUBLIC_ROUTER_ADDRESS before executing a yield strategy.");
   if (strategy.slug === "forge") {
     if (!ENDUR_XSTRK_ADDRESS || normAddr(outputToken) !== normAddr(ENDUR_XSTRK_ADDRESS)) throw new Error("Forge requires the verified Endur xSTRK vault/output token.");
-    return { steps: [{ target: ENDUR_XSTRK_ADDRESS, selector: "0xc73f681176fc7b3f9693986fd7b14581e8d540519e27400e88b8713932be01", approvals: [{ token: STRK_TOKEN_ADDRESS, amount }], calldata: [amount, 0n, ROUTER_ADDRESS] }], outputs: [{ token: outputToken, noteId: OPEN_NOTE(0), minAmount: 1n }] };
+    return { steps: [{ target: ENDUR_XSTRK_ADDRESS, selector: "0xc73f681176fc7b3f9693986fd7b14581e8d540519e27400e88b8713932be01", approvals: [{ token: STRK_TOKEN_ADDRESS, amount }], calldata: [...u256(amount), ROUTER_ADDRESS] }], outputs: [{ token: outputToken, noteId: OPEN_NOTE(0), minAmount: 1n }] };
   }
   if (strategy.slug === "reservoir") {
     if (!VESU_VAULT_ADDRESS || normAddr(outputToken) !== normAddr(VESU_VAULT_ADDRESS)) throw new Error("Reservoir requires the verified Vesu vSTRK vault/output token.");
-    return { steps: [{ target: VESU_VAULT_ADDRESS, selector: hash.getSelectorFromName("deposit"), approvals: [{ token: STRK_TOKEN_ADDRESS, amount }], calldata: [amount, 0n, ROUTER_ADDRESS] }], outputs: [{ token: outputToken, noteId: OPEN_NOTE(0), minAmount: 1n }] };
+    return { steps: [{ target: VESU_VAULT_ADDRESS, selector: hash.getSelectorFromName("deposit"), approvals: [{ token: STRK_TOKEN_ADDRESS, amount }], calldata: [...u256(amount), ROUTER_ADDRESS] }], outputs: [{ token: outputToken, noteId: OPEN_NOTE(0), minAmount: 1n }] };
   }
   if (strategy.slug === "prism" && !AVNU_PRIVATE_EXECUTOR_ADDRESS) throw new Error("Prism requires a current AVNU private executor quote.");
   throw new Error("Prism requires a fresh AVNU quote/build response; use the private action quote flow before signing.");
@@ -43,7 +44,7 @@ export function buildRecipe(strategy: Strategy, amount: bigint, outputToken: str
 /** Build the Vesu ERC-4626 deposit used by Reservoir. */
 export function buildVesuRecipe(amount: bigint, outputToken = VESU_VAULT_ADDRESS): Plan {
   if (!VESU_VAULT_ADDRESS || normAddr(outputToken) !== normAddr(VESU_VAULT_ADDRESS)) throw new Error("Reservoir requires the verified Vesu vSTRK vault.");
-  return { steps: [{ target: VESU_VAULT_ADDRESS, selector: hash.getSelectorFromName("deposit"), approvals: [{ token: STRK_TOKEN_ADDRESS, amount }], calldata: [amount, 0n, ROUTER_ADDRESS] }], outputs: [{ token: outputToken, noteId: OPEN_NOTE(0), minAmount: 1n }] };
+  return { steps: [{ target: VESU_VAULT_ADDRESS, selector: hash.getSelectorFromName("deposit"), approvals: [{ token: STRK_TOKEN_ADDRESS, amount }], calldata: [...u256(amount), ROUTER_ADDRESS] }], outputs: [{ token: outputToken, noteId: OPEN_NOTE(0), minAmount: 1n }] };
 }
 
 /** Adapt a fresh AVNU private build response into a bounded router plan. */
