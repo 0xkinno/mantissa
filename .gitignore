@@ -21,3 +21,6 @@ docs/*
 # Local toolchain (Scarb, snforge) installed for verification
 .tools/
 
+
+# Video production workspace (Remotion project + captured UI assets)
+video/

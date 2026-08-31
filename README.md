@@ -18,7 +18,7 @@
 | | |
 |---|---|
 | **Live demo** | [mantissa-starknet.vercel.app](https://mantissa-starknet.vercel.app) |
-| **Demo video** | [Watch on YouTube](#) |
+| **Demo video** | [Watch on YouTube](https://youtu.be/qqnkz5y3SLw?si=cpEaV8I1CmE4xeP_) |
 | **Repository** | [github.com/0xkinno/mantissa-strk20](https://github.com/0xkinno/mantissa-strk20) |
 | **Hackathon** | [STRK20 Private Sprint](https://strk20.starknet.io/hackathon) |
 | **Evidence ledger** | [strk20.json](strk20.json) |
