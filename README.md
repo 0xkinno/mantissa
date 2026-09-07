@@ -37,7 +37,7 @@
 | **Live demo** | [mantissa-starknet.vercel.app](https://mantissa-starknet.vercel.app) |
 | **Demo video** | [Watch on YouTube](https://youtu.be/qqnkz5y3SLw?si=cpEaV8I1CmE4xeP_) |
 | **Blog Post** | [Read on Medium](https://medium.com/@ojilerekingsley/the-real-value-hidden-in-plain-sight-building-mantissa-on-strk20-8bbaa9ddac67) |
-| **X Post** | [Read on X](https://x.com/0xkiddok) |
+| **X Post** | [Read on X](https://x.com/0xkiddok/status/2097002492814868910) |
 | **Repository** | [github.com/0xkinno/mantissa-strk20](https://github.com/0xkinno/mantissa-strk20) |
 | **Hackathon** | [STRK20 Private Sprint](https://strk20.starknet.io/hackathon) |
 | **Evidence ledger** | [strk20.json](strk20.json) |
