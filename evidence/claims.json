@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-09-07T09:03:17.204Z",
+  "scope": "Every claim in README.md and DISCOVERY.md maps to an artifact in this repository and the command that regenerates it. Nothing in this ledger is an explorer link or a tx-status assertion; receipts are re-derived from RPC events.",
+  "count": 12,
+  "claims": [
+    {
+      "id": "C-01",
+      "claim": "All five lifecycle transactions (shield, Forge, unshield, Reservoir, Prism) are receipt-confirmed on Starknet mainnet and every checklist item re-derives from RPC events.",
+      "artifact": "strk20.json; evidence/mainnet-verify-5-of-5.txt",
+      "regenerate": "node scripts/verify-mainnet.mjs --all"
+    },
+    {
+      "id": "C-02",
+      "claim": "MantissaRouter's deployed class hash matches the deployment record (on-chain 0x6111c076...2db6b).",
+      "artifact": "router-deployment.json",
+      "regenerate": "node scripts/verify-mainnet.mjs --all (final class-hash pin line)"
+    },
+    {
+      "id": "C-03",
+      "claim": "The Cairo suite passes: 9 tests, 0 failures, covering all 7 router invariants, plan serialization, and a 400-case adversarial campaign.",
+      "artifact": "contracts/tests/router_test.cairo; evidence/snforge-9-of-9.txt",
+      "regenerate": "cd contracts && snforge test"
+    },
+    {
+      "id": "C-04",
+      "claim": "The 400-case adversarial campaign (100 rogue targets, 100 oversized calldata, 100 oversized step counts, 100 below-floor outputs) accepts 0 hostile plans with 0 false clearances.",
+      "artifact": "contracts/tests/router_test.cairo (invariant_adversarial_campaign_rejects_hostile_plans); evidence/snforge-9-of-9.txt",
+      "regenerate": "cd contracts && snforge test invariant_adversarial_campaign_rejects_hostile_plans"
+    },
+    {
+      "id": "C-05",
+      "claim": "AVNU multi_route_swap defaults beneficiary to its executor; the unpatched call reverts 'Beneficiary is not the caller' and the beneficiary==caller patched call settles clean on the same mainnet state (counterfactual control).",
+      "artifact": "evidence/prove-caller-identity-tax-avnu.json; evidence/prove-caller-identity-tax.txt",
+      "regenerate": "node scripts/prove-caller-identity-tax.mjs avnu"
+    },
+    {
+      "id": "C-06",
+      "claim": "The legacy Vesu V2.1 v-token deposit() is pool-extension-gated ('not-allowed' for an external router); the Vesu V2 vSTRK v-token (open ERC-4626) settles clean on the same state (counterfactual control).",
+      "artifact": "evidence/prove-caller-identity-tax-vesu.json; evidence/prove-caller-identity-tax.txt",
+      "regenerate": "node scripts/prove-caller-identity-tax.mjs vesu"
+    },
+    {
+      "id": "C-07",
+      "claim": "The systematic caller-identity audit sweeps every integration (Endur, Vesu V2, Vesu V2.1 legacy, AVNU) plus the Ekubo router/core contracts on live mainnet state.",
+      "artifact": "evidence/audit-caller-identity.json; evidence/ekubo-probe.json",
+      "regenerate": "node scripts/audit-caller-identity.mjs (raw ABI probe: node scripts/probe-ekubo.mjs)"
+    },
+    {
+      "id": "C-08",
+      "claim": "STRK20 charges a flat 6 STRK per privacy operation (pool get_fee_amount view on mainnet).",
+      "artifact": "evidence/pool-fee.json",
+      "regenerate": "node scripts/fee-check.mjs"
+    },
+    {
+      "id": "C-09",
+      "claim": "The deployed router allow-list covers the Endur, Vesu V2 vSTRK, and AVNU targets plus the Ekubo router used in recipe builds; outputs are restricted to xSTRK, vSTRK, STRK, and ETH.",
+      "artifact": "router-deployment.json; contracts/src/router.cairo",
+      "regenerate": "compare router-deployment.json allow-lists to contracts/src/router.cairo constructor"
+    },
+    {
+      "id": "C-10",
+      "claim": "The caller-identity preflight is exposed as public CLI infrastructure usable against any target contract and calldata sample.",
+      "artifact": "scripts/check-caller-identity.mjs; scripts/caller-identity-lib.mjs; STRK20_INTEGRATION.md",
+      "regenerate": "node scripts/check-caller-identity.mjs --help"
+    },
+    {
+      "id": "C-11",
+      "claim": "The /private page measures the STRK20 pool's own Deposit/Withdrawal traffic in the user's rough size band before a shield, strategy, or unshield is signed (live per-action disclosure) and says plainly when the band is thin or empty or the query is truncated.",
+      "artifact": "src/lib/poolTrafficCore.ts; src/lib/poolTraffic.ts; src/components/BandDisclosure.tsx; src/app/private/page.tsx",
+      "regenerate": "npm run build; band math and event decoding unit-tested by npm test (src/lib/poolTrafficCore.test.ts, fixtures from mainnet receipts)"
+    },
+    {
+      "id": "C-12",
+      "claim": "The repository ships a 25-test TypeScript regression suite and GitHub Actions CI that runs typecheck, tests, the production build, and the Cairo suite (mainnet receipt re-derivation when an RPC secret is configured).",
+      "artifact": "src/lib/*.test.ts; tests/verifySnapshot.test.ts; .github/workflows/ci.yml; package.json (test script)",
+      "regenerate": "npm test; push to GitHub and read the ci workflow results"
+    }
+  ]
+}

@@ -10,6 +10,28 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
 
 ## Recent updates
 
+- **Caller-identity discovery, audit and preflight tooling (2026-09-07).**
+  The discovery record [DISCOVERY.md](DISCOVERY.md) documents the caller-identity
+  tax reproduced on AVNU and Vesu. The systematic audit
+  (`node scripts/audit-caller-identity.mjs`) sweeps every integration plus the
+  Ekubo router/core contracts on live mainnet state; the controlled before/after
+  control runs live in `node scripts/prove-caller-identity-tax.mjs --all`. The
+  preflight is public infrastructure: `scripts/check-caller-identity.mjs` takes any
+  target contract and calldata sample and prints the same ok/FAIL checklist.
+  Artifacts: `evidence/audit-caller-identity.json`, `evidence/ekubo-probe.json`,
+  `evidence/prove-caller-identity-tax-*.json`, `evidence/prove-caller-identity-tax.txt`.
+- **Cairo suite re-run (2026-09-07).** `snforge test` in `contracts/`: 9 passed,
+  0 failed, 0 ignored (the 7 invariant tests, plan serialization, and the 400-case
+  adversarial campaign). Snapshot: `evidence/snforge-9-of-9.txt`.
+- **Claim-to-artifact ledger (2026-09-07).** `evidence/claims.json` ties each README
+  claim to the artifact that proves it and the command that regenerates it (10 claims).
+- **Pool fee measured (2026-09-07).** `scripts/fee-check.mjs` reads the pool's
+  `get_fee_amount` view: a flat 6 STRK per privacy operation
+  (`evidence/pool-fee.json`). Reflected in README's "What This Costs".
+- **Settlement digest (2026-09-07).** `scripts/settlement-digest.mjs` implements the
+  signed-digest schema and Stark-curve verifier (dev-key demo with on-chain receipt
+  facts in `evidence/settlement-digest-demo.json`); the /compliance page now
+  presents the mode honestly as wallet-signing pending.
 - **Mainnet lifecycle proof (2026-08-26).** A complete human-operated cycle is
   receipt-confirmed on mainnet: shield STRK → private Forge to Endur xSTRK →
   unshield STRK. Hashes and status live in [strk20.json](strk20.json) and
@@ -61,7 +83,7 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
   residue, minimum output threshold cleared. This is the first
   receipt-confirmed mainnet execution of MantissaRouter V3.
 
-- **MantissaRouter V2 pre-flight (2026-08-28).** `scripts/simulate-router.mjs` builds each router plan exactly as MantissaRouter executes it and simulates it against live mainnet RPC state (no gas spent). Result: Forge (Endur xSTRK) settles clean; Prism (AVNU) route verified — AVNU `multi_route_swap` enforces `beneficiary == caller`, and the recipe pins the beneficiary to MantissaRouter; Reservoir (Vesu) verified **blocked at the protocol layer** — the allow-listed v-token `deposit()` accepts only its pool extension as caller (`'not-allowed'` on live mainnet state). Output embedded in README § Router V2 Pre-Flight. Superseded 2026-08-29: Reservoir is now receipt-confirmed via the Vesu V2 v-token swap (see [D-002](DECISIONS.md)).
+- **MantissaRouter V2 pre-flight (2026-08-28).** `scripts/simulate-router.mjs` builds each router plan exactly as MantissaRouter executes it and simulates it against live mainnet RPC state (no gas spent). Result: Forge (Endur xSTRK) settles clean; Prism (AVNU) route verified — AVNU `multi_route_swap` enforces `beneficiary == caller`, and the recipe pins the beneficiary to MantissaRouter; Reservoir (Vesu) verified **blocked at the protocol layer** — the allow-listed v-token `deposit()` accepts only its pool extension as caller (`'not-allowed'` on live mainnet state). Output embedded in README § Router Pre-Flight. Superseded 2026-08-29: Reservoir is now receipt-confirmed via the Vesu V2 v-token swap (see [D-002](DECISIONS.md)).
 - **Prism recipe fix (2026-08-28).** `buildAvnuRecipe` now pins the `multi_route_swap` beneficiary (calldata[8]) to MantissaRouter and derives the router's own minimum-output floor (99% of the quoted buy amount). `npm run typecheck` passes.
 - **Class-hash pin (2026-08-28).** `scripts/verify-mainnet.mjs` now re-reads the deployed router's on-chain class hash and compares it to `router-deployment.json`: on-chain `0x6111c076…2db6b` matches the record.
 - **Adversarial campaign test (2026-08-28).** A ninth Cairo test runs 400 hostile cases (100 non-allow-listed targets, 100 oversized calldata lengths, 100 oversized step counts, 100 below-floor outputs). `snforge test`: **9 passed, 0 failed**.
@@ -74,11 +96,21 @@ primary artifacts. It is the audit trail behind [README.md](README.md).
 | Shield / Forge / Unshield / Prism / Reservoir hashes | `node scripts/verify-mainnet.mjs <hash> …` re-derives each item from receipt events on `SN_MAIN` |
 | Router deployment | `router-deployment.json` records class hash, deploy tx, allow-list, and output-token allow-list |
 | Router invariants | 9 Cairo tests incl. 400-case adversarial campaign (`snforge test`) — **9 passed, 0 failed** (2026-08-28) |
+| Caller-identity audit | `node scripts/audit-caller-identity.mjs` — 5 protocols swept on live mainnet state (`evidence/audit-caller-identity.json`) |
+| Before/after control | `node scripts/prove-caller-identity-tax.mjs --all` — AVNU and Vesu cases (`evidence/prove-caller-identity-tax-*.json`) |
+| Cairo suite (re-run 2026-09-07) | `snforge test` — 9 passed, 0 failed (`evidence/snforge-9-of-9.txt`) |
+| Pool fee schedule | `node scripts/fee-check.mjs` — 6 STRK per operation (`evidence/pool-fee.json`) |
+| Settlement digest | `node scripts/settlement-digest.mjs` — schema + verifier (`evidence/settlement-digest-demo.json`) |
+| TypeScript regression suite | `npm test` — 25 passed (recipe guards, pool-event decoding against real mainnet fixtures, evidence-snapshot checks) |
+| Live per-action disclosure | `src/lib/poolTraffic.ts` + `BandDisclosure` on /private — counted from the pool's own Deposit/Withdrawal events; decode and band logic unit-tested |
+| CI | `.github/workflows/ci.yml` — typecheck, TypeScript tests, production build, Cairo suite; mainnet re-derivation when an RPC secret is configured |
 | Protocol targets | Endur, Vesu, and AVNU addresses pinned in `src/lib/config.ts` and `.env.local.example` |
 | STRK20 integration depth | [STRK20_INTEGRATION.md](STRK20_INTEGRATION.md) |
 
 ## Key files
 
+- [DISCOVERY.md](DISCOVERY.md) — discovery record (caller-identity tax, controlled controls, Ekubo sweep)
+- [evidence/claims.json](evidence/claims.json) — claim-to-artifact ledger with regeneration commands
 - [README.md](README.md) — product, evidence, invariants, privacy boundary, limitations
 - [DECISIONS.md](DECISIONS.md) — engineering decisions log (router V2→V3, Vesu v-token swap, AVNU beneficiary pin)
 - [EVIDENCE.md](EVIDENCE.md) — evidence ledger

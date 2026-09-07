@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-09-07T09:20:35.236Z",
+  "domain": "MANTISSA_SETTLEMENT_V1",
+  "fields": {
+    "strategy": "Forge",
+    "amount": "7000000000000000000",
+    "router": "0x74fc61266f234638786bcacc057b6bc7129f8f08c0e2d21a199d5e0b7f460bc",
+    "outputToken": "0x28d709c875c0ceac3dce7065bec5328186dc89fe254527084d1689910954b0a",
+    "txHash": "0x6e12ee7283684c905f6138b511a00588b67e64bdc543af1925c393e3dd07333",
+    "expiry": "1788859233"
+  },
+  "digest": "0x33f3145c91a04164d0a03783836199b5725509c98b8d4631336f05df0f90e35",
+  "signerPublicKey": "0x040321a697d95efeebd50068b80c3ce7978f7c29c14333e80ccc56c87ca7a8942601d5bb07b476543be30a741f7ac744eeeb03569eddc41f0749f5493ec83187ce",
+  "signature": {
+    "r": "0x067e0fba740e57598a8dc9a1963ea8dee51fe32fe5760d67392efbbcb31689bd",
+    "s": "0x022b76ef788ec4b45cb8353d61dc263cf25d91e6867ae795ee67d0831644b45e"
+  },
+  "signatureValid": true,
+  "tamperRejected": true,
+  "status": "verifier demo with a dev key; production digests are signed by the user's own privacy wallet",
+  "txCheck": {
+    "hash": "0x06e12ee7283684c905f6138b511a00588b67e64bdc543af1925c393e3dd07333",
+    "finality": "ACCEPTED_ON_L1",
+    "finalityOk": true,
+    "poolTouched": true
+  }
+}

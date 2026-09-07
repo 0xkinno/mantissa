@@ -1,0 +1,12 @@
+﻿snforge test (2026-09-07, contracts/)
+Tests: 9 passed, 0 failed, 0 ignored, 0 filtered out
+
+[PASS] plan_types_serialize_with_expected_shapes
+[PASS] invariant1_rejects_non_pool_caller
+[PASS] invariant2_rejects_step_targeting_pool_or_router
+[PASS] invariant3_resets_approvals_after_step
+[PASS] invariant4_rejects_router_residue
+[PASS] invariant5_rejects_output_below_floor
+[PASS] invariant6_rejects_oversized_work
+[PASS] invariant7_rejects_non_allowlisted_target
+[PASS] invariant_adversarial_campaign_rejects_hostile_plans (400 cases: 100 rogue targets, 100 oversized calldata, 100 oversized step counts, 100 below-floor outputs; 0 accepted)

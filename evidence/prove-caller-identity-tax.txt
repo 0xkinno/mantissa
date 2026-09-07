@@ -1,0 +1,16 @@
+2026-09-07T07:42:42.021Z
+prove-caller-identity-tax · Alchemy mainnet · step size 5 STRK
+
+AVNU multi_route_swap (Prism) — STRK → ETH
+  unpatched (beneficiary = AVNU executor 0x426dcd1ab5 as built):
+    FAIL  reverts "Beneficiary is not the caller"
+  patched (beneficiary = executing account):
+    ok    settles clean, 14 events
+  recipe mapping (production):
+    ok    the executing router is AVNU's caller (pool-only caller guard I1), and the recipe pins calldata[8] to that router before submission; the receipt does not expose calldata, so the pin is enforced at build time and verified by simulate-router.mjs, not re-derivable from the receipt
+
+Vesu v-token deposit() (Reservoir) — STRK → vSTRK
+  V2.1 vSTRK v-token deposit() — original allow-listed target (pool-extension-gated):
+    FAIL  reverts 'not-allowed' for a non-extension caller
+  V2 vSTRK v-token deposit() — patched target (open ERC-4626):
+    ok    settles clean, 9 events

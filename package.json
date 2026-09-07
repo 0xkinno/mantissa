@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "verify:tx": "node scripts/verify-tx.mjs"
+    "verify:tx": "node scripts/verify-tx.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@starknet-io/get-starknet-discovery": "6.0.3",
@@ -27,6 +29,7 @@
     "eslint-config-next": "14.2.15",
     "postcss": "8.4.49",
     "tailwindcss": "3.4.16",
-    "typescript": "5.7.2"
+    "typescript": "5.7.2",
+    "vitest": "^3.2.7"
   }
 }

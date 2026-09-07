@@ -68,6 +68,47 @@ made Prism permanently reverting.
 pin"), `scripts/simulate-router.mjs` Prism pre-flight (beneficiary invariant
 satisfied), Prism mainnet receipt `0x78815ce9...e0aa6b3`.
 
+## D-004 — Caller-identity preflight is a mandatory gate before any new strategy is wired in
+
+**Decision.** Every integration point must clear a caller-identity preflight against
+live mainnet state before it is marked live, and the preflight is shipped as public
+CLI infrastructure (`scripts/check-caller-identity.mjs`) rather than a MANTISSA-internal
+check.
+
+**Why.** Two receipt-proven strategies (Prism and Reservoir) each failed silently at
+the target protocol's caller assumptions before the fix: AVNU's `multi_route_swap`
+defaults the beneficiary to its own executor and enforces `beneficiary == caller`; the
+legacy Vesu V2.1 v-token restricted `deposit()` to its own pool extension. A stateless
+router holds no keys, so it is never the entity those protocols assumed would call
+them. The systematic audit (`scripts/audit-caller-identity.mjs`) sweeps Endur, Vesu V2
+and V2.1, AVNU, and the Ekubo router/core contracts. Ekubo did not reproduce the tax:
+its swap entrypoints carry no caller-derived beneficiary, settlement is locker-centric
+(proceeds settle to the Ekubo Router contract), and `Core.swap` is lock-scoped with an
+explicit locker-supplied recipient.
+
+**Rejected.** Trusting that a public-looking ERC-4626 interface means an external
+router can call it, or that a route that settles for an account will settle for a
+router. Both assumptions failed in production.
+
+**Evidence.** [DISCOVERY.md](DISCOVERY.md), `evidence/audit-caller-identity.json`,
+`evidence/ekubo-probe.json`, `evidence/prove-caller-identity-tax-{avnu,vesu}.json`.
+
+## D-005 — Signed settlement digest as a second disclosure mode
+
+**Decision.** Beside the viewing-key flow, offer a signed, short-lived settlement
+digest: `poseidon(domain, strategy, amount, router, outputToken, txHash, expiry)`
+signed by the wallet, verifiable without any shielded state.
+
+**Why.** A counterparty sometimes needs to confirm one action happened and reached
+finality — not audit an entire history. A digest binds the specific execution and
+its receipt facts; the verifier never touches a viewing key or another note.
+
+**Rejected.** Requiring a viewing-key export for every disclosure, which over-exposes
+the position whenever only one action needs proving.
+
+**Evidence.** `scripts/settlement-digest.mjs`, `evidence/settlement-digest-demo.json`,
+`src/app/compliance/page.tsx` (Settlement Proof card, honest wallet-signing status).
+
 ## How decisions are recorded
 
 - Decisions are logged when they change what a strategy executes or how the router

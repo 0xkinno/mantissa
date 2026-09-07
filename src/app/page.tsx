@@ -310,7 +310,7 @@ export default function Home() {
               <p>
                 A DeFi investor deposits fifty thousand STRK into a Starknet
                 staking protocol. Within minutes, on-chain trackers index the
-                transaction. Competitors see the position. Copy-traders follow the
+                transaction. The position is public. Copy-traders follow the
                 strategy. The investor&apos;s entire financial approach becomes
                 public record.
               </p>

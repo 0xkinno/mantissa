@@ -1,0 +1,16 @@
+{
+  "legacyTarget": "0x37ae3f583c8d644b7556c93a04b83b52fa96159b2b0cbd83c14d3122aef80a2",
+  "patchedTarget": "0x6d6d2bf905dd199c78f2e421521d8473042737be9f47904e7578536c10f279d",
+  "rpc": "Alchemy mainnet",
+  "amount": "5000000000000000000",
+  "unpatched": {
+    "reverted": true,
+    "revert": "Transaction execution has failed: 0: Error in the called contract (contract address: 0x035011ee98917db19796cd73a26d368c2020e2b69c4133d9bbf0a06310a5b929, class hash: 0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f, selector: 0x015d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad): Execution failed. Failure reason: (0x617267656e742f6d756c746963616c6c2d6661696c6564 ('argent/multicall-failed'), 0x1, \"not-allowed\", 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))."
+  },
+  "patched": {
+    "ok": true,
+    "events": 9
+  },
+  "reproduced": true,
+  "generatedAt": "2026-09-07T07:42:42.017Z"
+}

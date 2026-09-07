@@ -1,0 +1,17 @@
+{
+  "target": "0x4270219d365d6b017231b52e92b3fb5d7c8378b05e9abc97724537a80e93b0f",
+  "executor": "0x426dcd1ab5fa2f852f138d07cb37708b00a4db999677fe2d0c9a440702dbe5e",
+  "rpc": "Alchemy mainnet",
+  "amount": "5000000000000000000",
+  "unpatched": {
+    "reverted": true,
+    "revert": "Transaction execution has failed: 0: Error in the called contract (contract address: 0x035011ee98917db19796cd73a26d368c2020e2b69c4133d9bbf0a06310a5b929, class hash: 0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f, selector: 0x015d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad): Execution failed. Failure reason: (0x617267656e742f6d756c746963616c6c2d6661696c6564 ('argent/multicall-failed'), 0x1, 0x42656e6566696369617279206973206e6f74207468652063616c6c6572 ('Beneficiary is not the caller'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))."
+  },
+  "patched": {
+    "ok": true,
+    "events": 14
+  },
+  "callerInSimulation": "the counterfactual executes as an account; AVNU compares beneficiary to its caller, so pinning beneficiary to the sim caller isolates the beneficiary == caller assumption",
+  "reproduced": true,
+  "generatedAt": "2026-09-07T07:42:40.274Z"
+}

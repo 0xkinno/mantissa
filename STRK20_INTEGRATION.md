@@ -27,3 +27,30 @@ await account.strk20InvokeTransaction(actions);
 ```
 
 The pool’s one-invoke constraint makes the router the composition boundary. Each step’s approvals are reset immediately, unknown targets are rejected by the allow-list, and every touched non-output token must end at zero.
+## Caller-identity preflight
+
+Some DeFi protocols on Starknet assume their caller is a privileged, persistent, or
+self-interested account. A stateless STRK20 router is none of those, and the mismatch
+reverts without explaining itself (`'not-allowed'`, `'Beneficiary is not the caller'`).
+Before any strategy step is reported clean, MANTISSA runs the caller-identity preflight:
+
+```ts
+checkCallerIdentityAssumptions(targetAddr, calldata, { selector, router, funder })
+```
+
+- decodes caller-derived fields in the exact calldata the router would execute
+  (e.g. AVNU `multi_route_swap` puts `beneficiary` in `calldata[8]` and requires
+  `beneficiary == caller`),
+- simulates the step unpatched against live mainnet state with the router as caller,
+- reports each check as an `ok` / `FAIL` row, the same checklist the router pre-flight prints.
+
+The check is public infrastructure, not a MANTISSA-internal detail. Any team on the pool
+can run it against their own router and target contract:
+
+```bash
+node scripts/check-caller-identity.mjs --target 0x<contract> --selector <name|selector> --calldata 0x<felt>,0x<felt>,...
+```
+
+`scripts/audit-caller-identity.mjs` re-runs the preflight against every integration
+(Endur, Vesu V2 and the legacy V2.1 v-token, AVNU) plus the Ekubo contracts on live
+mainnet state and writes `evidence/audit-caller-identity.json`.

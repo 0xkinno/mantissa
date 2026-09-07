@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-09-07T07:35:44.913Z",
+  "amount": "5000000000000000000",
+  "results": [
+    {
+      "protocol": "endur-xstrk (Forge)",
+      "target": "0x28d709c875c0ceac3dce7065bec5328186dc89fe254527084d1689910954b0a",
+      "outcome": [
+        {
+          "check": "router-shaped ERC-4626 deposit step settles on live mainnet state",
+          "ok": true,
+          "detail": "8 events, receiver is explicit calldata"
+        }
+      ]
+    },
+    {
+      "protocol": "vesu-v2-vstrk (Reservoir, patched target)",
+      "target": "0x6d6d2bf905dd199c78f2e421521d8473042737be9f47904e7578536c10f279d",
+      "outcome": [
+        {
+          "check": "open ERC-4626 deposit step settles on live mainnet state",
+          "ok": true,
+          "detail": "9 events, receiver is explicit calldata"
+        }
+      ]
+    },
+    {
+      "protocol": "vesu-v2.1-vstrk (legacy target — reproduced tax)",
+      "target": "0x37ae3f583c8d644b7556c93a04b83b52fa96159b2b0cbd83c14d3122aef80a2",
+      "outcome": [
+        {
+          "check": "deposit() restricted to its own pool extension",
+          "ok": true,
+          "detail": "Transaction execution has failed: 0: Error in the called contract (contract address: 0x035011ee98917db19796cd73a26d368c2020e2b69c4133d9bbf0a06310a5b929, class hash: 0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f, selector: 0x015d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad): Execution failed. Failure reason: (0x617267656e742f6d756c746963616c6c2d6661696c6564 ('argent/multicall-failed'), 0x1, \"not-allowed\", 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))."
+        }
+      ]
+    },
+    {
+      "protocol": "avnu-multi_route_swap (Prism)",
+      "target": "0x4270219d365d6b017231b52e92b3fb5d7c8378b05e9abc97724537a80e93b0f",
+      "outcome": [
+        {
+          "check": "target is the allow-listed AVNU router",
+          "ok": true,
+          "detail": "0x4270219d36"
+        },
+        {
+          "check": "beneficiary defaults to the build executor, not the caller",
+          "ok": true,
+          "detail": "calldata[8] = 0x426dcd1ab5 (executor 0x426dcd1ab5)"
+        },
+        {
+          "check": "unpatched build reverts (counterfactual control)",
+          "ok": true,
+          "detail": "Transaction execution has failed: 0: Error in the called contract (contract address: 0x035011ee98917db19796cd73a26d368c2020e2b69c4133d9bbf0a06310a5b929, class hash: 0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f, selector: 0x015d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad): Execution failed. Failure reason: (0x617267656e742f6d756c746963616c6c2d6661696c6564 ('argent/multicall-failed'), 0x1, 0x42656e6566696369617279206973206e6f74207468652063616c6c6572 ('Beneficiary is not the caller'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))."
+        },
+        {
+          "check": "patched build (beneficiary = caller) settles clean",
+          "ok": true,
+          "detail": "14 events"
+        }
+      ]
+    },
+    {
+      "protocol": "ekubo (router/core, not yet a live strategy)",
+      "target": "0x199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
+      "outcome": [
+        {
+          "check": "router: swap entrypoints carry no caller-derived beneficiary field",
+          "ok": true,
+          "detail": "swap entrypoints: locked, swap, multihop_swap, multi_multihop_swap, quote_multi_multihop_swap, quote_multihop_swap, quote_swap"
+        },
+        {
+          "check": "router: swap proceeds settle to the router contract itself (locker-centric recipient = contract, source-confirmed), so direct stateless-router wiring needs an explicit plumbing step",
+          "ok": true,
+          "detail": "fields: id, data, node, token_amount, route, swaps"
+        },
+        {
+          "check": "core: swap() is lock-scoped — only the active locker can execute it; an external stateless router cannot call core.swap directly",
+          "ok": true,
+          "detail": "entrypoints: get_locker_state, get_locker_delta, get_pool_price, get_pool_liquidity, get_pool_fees_per_liquidity, get_pool_fees_per_liquidity_inside, get_pool_tick_liquidity_delta, get_pool_tick_liquidity_net"
+        },
+        {
+          "check": "core: swap() recipient is an explicit locker-supplied calldata parameter, not the transaction caller",
+          "ok": true,
+          "detail": "fields: id, token_address, pool_key, bounds, index, recipient, token, amount, data, initial_tick, params"
+        }
+      ]
+    }
+  ]
+}

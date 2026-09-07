@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { walletV6, type STRK20_ACTION, type WalletAccountV6 } from "starknet";
 import { motion } from "framer-motion";
 import Nav from "@/components/Nav";
+import BandDisclosure from "@/components/BandDisclosure";
 import {
   connectWallet,
   getWalletSession,
@@ -369,7 +370,23 @@ export default function PrivatePage() {
     }
   }
 
-  const title =
+    const parsedAmount = (() => {
+    try {
+      return parseAmount(amount);
+    } catch {
+      return null;
+    }
+  })();
+
+  const outputTokenForMode =
+    mode === "forge"
+      ? ENDUR_XSTRK_ADDRESS
+      : mode === "reservoir"
+      ? VESU_VAULT_ADDRESS
+      : process.env.NEXT_PUBLIC_ETH_ADDRESS ??
+        "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+
+const title =
     mode === "forge"
       ? "Forge · Endur liquid staking"
       : mode === "reservoir"
@@ -476,7 +493,40 @@ export default function PrivatePage() {
                 />
               </label>
               <div className="flex flex-wrap gap-3">
-                <button
+                {account && parsedAmount && (
+                <div className="mt-5 space-y-2 rounded-2xl border border-[var(--border)] bg-[#F5F5F2] p-4">
+                  <p className="mono text-[11px] uppercase tracking-[.2em] text-[var(--muted)]">
+                    What this publishes — measured live
+                  </p>
+                  <BandDisclosure
+                    token={STRK_TOKEN_ADDRESS}
+                    amountRaw={parsedAmount}
+                    direction="Deposit"
+                    actionPhrase="public shields (pool deposits) of this size"
+                  />
+                  <BandDisclosure
+                    token={STRK_TOKEN_ADDRESS}
+                    amountRaw={parsedAmount}
+                    direction="Withdrawal"
+                    actionPhrase="STRK exits from the pool (the public leg of a strategy or unshield)"
+                  />
+                  {outputTokenForMode &&
+                    String(outputTokenForMode).toLowerCase() !==
+                      String(STRK_TOKEN_ADDRESS).toLowerCase() && (
+                      <BandDisclosure
+                        token={outputTokenForMode}
+                        amountRaw={parsedAmount}
+                        direction="Withdrawal"
+                        actionPhrase="unshields of this output token"
+                      />
+                    )}
+                  <p className="mono text-[11px] leading-5 text-[var(--muted)]">
+                    Timing note: a shield executed back-to-back with a strategy
+                    links the two by timing and narrows the anonymity set.
+                  </p>
+                </div>
+              )}
+              <button
                   onClick={shield}
                   className="rounded-full bg-[var(--forest)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#23481f]"
                 >

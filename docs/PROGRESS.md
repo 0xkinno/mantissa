@@ -1,8 +1,24 @@
 # Progress
-
-2026-08-25 — Read both instruction files completely. Cloned Jalin, starter kit, privacy SDK, awesome-strk20, Cloakra, and Facet under `references/`. Initialized product shell, wallet integration, strategy encoder, router contract, evidence script, and required documentation.
+2026-09-07 - Discovery-build pass: reference repositories for protocol and privacy-layer research are consolidated under references/ (gitignored, never shipped). Scaffolded DISCOVERY.md, the caller-identity preflight library, and the systematic audit evidence file.
+- Completed the systematic caller-identity audit sweep (Endur, Vesu V2/V2.1, AVNU, and Ekubo router/core) on live mainnet state; wrote evidence/audit-caller-identity.json + evidence/ekubo-probe.json.
+- Ran the controlled before/after proof (AVNU beneficiary pin, Vesu v-token swap): evidence/prove-caller-identity-tax-{avnu,vesu}.json + .txt.
+- Added the public preflight CLI scripts/check-caller-identity.mjs and documented it in STRK20_INTEGRATION.md.
+- Re-ran the Cairo suite: 9 passed, 0 failed, incl. the 400-case adversarial campaign (evidence/snforge-9-of-9.txt).
+- Re-derived all five mainnet receipts with verify-mainnet.mjs --all (evidence/mainnet-verify-5-of-5.txt).
+- Added evidence/claims.json (10 claims, each tied to an artifact + regeneration command).
+- Measured the pool fee schedule on-chain (scripts/fee-check.mjs; evidence/pool-fee.json): flat 6 STRK per operation.
+- Implemented the settlement-digest schema + Stark-curve verifier (scripts/settlement-digest.mjs) and added the Settlement Proof card to /compliance.
+- Rebuilt the README: Status-at-a-Glance, Tests & Evidence mapping, Router Pre-Flight, Limitations, What This Costs, For Other Builders; removed all project references from shipped docs per directive.
+- Completed the README hero rewrite (Step 7): Pain → Product → Proof → Mechanism beats, neutral framing, nothing below How It Works touched.
+- Added the discovery-by-discovery delta to docs/COMPETITIVE_ANALYSIS.md (internal-only, gitignored, never ships).
+- Added the Reservoir row to the EVIDENCE.md lifecycle table and rewrote the record template to archive tense.
+- Gitignored the root-level working directive MANTISSA_DISCOVERY.md so research/reference material never ships.
+- Added a 25-test TypeScript regression suite (vitest: recipe guards, pool-event decoding against real mainnet fixtures, evidence-snapshot checks) and a GitHub Actions CI workflow (typecheck, tests, build, Cairo suite; mainnet receipt re-derivation when an RPC secret is configured).
+- Shipped the live per-action disclosure in /private: the pool's own Deposit/Withdrawal traffic in the user's rough size band is measured before signing and reported plainly when thin or empty (src/lib/poolTraffic.ts, src/components/BandDisclosure.tsx).
+- Moved the full 5-of-5 re-derivation block out of the README into EVIDENCE.md and tightened the README test/CI claims.
+2026-08-25 — Read both instruction files completely. Cloned protocol SDK and privacy-primitive reference material under `references/` (kept local, not shipped). Initialized product shell, wallet integration, strategy encoder, router contract, evidence script, and required documentation.
 2026-08-26 — Completed the first human-operated mainnet lifecycle: shield STRK, private Forge to Endur xSTRK, and unshield STRK. Receipt hashes are recorded in `strk20.json` and `EVIDENCE.md`.
-2026-08-25 — Added security review, STRK20 runtime action snippets, competitor differentiation evidence, and receipt-verifier hardening.
+2026-08-25 — Added security review, STRK20 runtime action snippets, differentiation and positioning evidence, and receipt-verifier hardening.
 
 ### Reservoir / Prism integration update (2026-08-26)
 

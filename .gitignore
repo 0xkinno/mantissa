@@ -24,3 +24,6 @@ docs/*
 
 # Video production workspace (Remotion project + captured UI assets)
 video/
+
+# Root-level working directive (research/reference material, kept local)
+MANTISSA_DISCOVERY.md

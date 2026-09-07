@@ -1,0 +1,92 @@
+﻿name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# No job below needs credentials. Anything that needs a key, funds, or a wallet is
+# deliberately out of CI, so a pipeline a fork runs is the same pipeline main runs.
+env:
+  SCARB_VERSION: 2.20.1
+  FOUNDRY_VERSION: 0.63.0
+
+jobs:
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: TypeScript regression suite (recipe guards, event decoding, evidence snapshot)
+        run: npm test
+      - name: Production build
+        run: npm run build
+
+  cairo:
+    name: Cairo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - uses: foundry-rs/setup-snfoundry@v4
+        with:
+          starknet-foundry-version: ${{ env.FOUNDRY_VERSION }}
+      - name: Build the router
+        run: scarb build
+        working-directory: contracts
+      - name: Cairo suite (7 invariants + serialization + 400-case campaign)
+        run: snforge test
+        working-directory: contracts
+
+  mainnet-evidence:
+    name: Mainnet evidence
+    # Reads mainnet through a repository secret; skipped on forks and until the
+    # secret is configured so the pipeline never fabricates a receipt check.
+    if: ${{ secrets.NEXT_PUBLIC_STARKNET_RPC_URL != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Re-derive all five lifecycle receipts from RPC events
+        env:
+          NEXT_PUBLIC_STARKNET_RPC_URL: ${{ secrets.NEXT_PUBLIC_STARKNET_RPC_URL }}
+        run: node scripts/verify-mainnet.mjs --all
+
+  secrets:
+    name: No secrets committed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tracked .env files must be examples only
+        run: |
+          if git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -v '\.env\.example$'; then
+            echo "::error::A .env file is tracked"
+            exit 1
+          fi
+          echo "no .env files tracked"
+      - name: No RPC credentials in tracked files
+        run: |
+          if git ls-files -z | grep -zv -E '\.md$|\.env\.example$|^\.github/' \
+            | xargs -0 grep -nEI 'alchemy\.com/[A-Za-z0-9_-]{20,}' ; then
+            echo "::error::Possible RPC credential in tracked files"
+            exit 1
+          fi
+          echo "no RPC credentials found in tracked files"

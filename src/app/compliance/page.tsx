@@ -64,7 +64,45 @@ export default function CompliancePage() {
             auditor&apos;s secure channel. This boundary is intentional: the dapp
             must not custody viewing keys.
           </p>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mt-12 rounded-3xl border border-[var(--border)] bg-white p-6 shadow-sm md:p-8"
+        >
+          <div className="flex items-center justify-between border-b border-[var(--border)] pb-5">
+            <span className="font-medium">Settlement proof</span>
+            <span className="mono text-xs text-[var(--muted)]">SIGNED DIGEST · NO VIEWING KEY</span>
+          </div>
+          <p className="py-5 text-sm leading-relaxed text-[var(--muted)]">
+            A narrower disclosure mode for one action, not an account history. The user
+            signs a short-lived digest binding the strategy, the amount, the executing
+            MantissaRouter, the output token, the transaction hash, and an expiry. Anyone
+            holding the digest can verify that this signer authorized this specific
+            action, that the transaction touched the STRK20 pool, and that it reached
+            finality — without ever seeing a shielded balance or any other note.
+          </p>
+          <div className="rounded-2xl bg-[#F5F5F0] p-5 font-mono text-xs leading-6 text-[var(--muted)]">
+            digest = poseidon(domain, strategy, amount, router, outputToken, txHash, expiry)
+          </div>
+          <ul className="space-y-3 pt-5 text-sm text-[var(--muted)]">
+            <li className="flex items-center gap-3">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E8F0E6] text-xs font-bold text-[var(--forest)]">✓</span>
+              <span>Signature validity and tamper rejection are verifiable offline</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E8F0E6] text-xs font-bold text-[var(--forest)]">✓</span>
+              <span>Receipt finality and pool-touch are checked over the RPC when a hash is supplied</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#EEF2FF] text-xs font-bold text-[var(--indigo)]">•</span>
+              <span>The schema and verifier are implemented (scripts/settlement-digest.mjs);
+              live digests require the user&apos;s own privacy wallet to sign</span>
+            </li>
+          </ul>
         </motion.div>
+</motion.div>
       </section>
     </main>
   );
