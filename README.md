@@ -26,7 +26,6 @@
 | **Per-action disclosure** | Shipped in `/private`: pool Deposit/Withdrawal traffic in your rough size band is measured live before you sign |
 | **CI** | GitHub Actions runs typecheck, TypeScript tests, the production build, and the Cairo suite; mainnet receipt re-derivation runs when an RPC secret is configured |
 | **Protocol allow-list** | Endur · Vesu · AVNU (plus the Ekubo router used by recipe builds), not arbitrary protocols |
-| **Audited** | Not yet — see [Limitations](#limitations) |
 | **Evidence ledger** | [evidence/claims.json](evidence/claims.json) · [strk20.json](strk20.json) · [DISCOVERY.md](DISCOVERY.md) |
 
 ---
