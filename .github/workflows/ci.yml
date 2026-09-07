@@ -79,7 +79,7 @@ jobs:
           fetch-depth: 0
       - name: Tracked .env files must be examples only
         run: |
-          if git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -v '\.env\.example$'; then
+          if git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -v '\.example$'; then
             echo "::error::A .env file is tracked"
             exit 1
           fi
